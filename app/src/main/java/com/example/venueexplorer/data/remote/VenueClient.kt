@@ -1,15 +1,18 @@
-package com.example.venueexplorer.data.local
+package com.example.venueexplorer.data.remote
 
-import com.adsoyad.venueexplorer.data.VenueApiService
 import retrofit2.Retrofit
-import retrofit2.converter.scalars.ScalarsConverterFactory
+import retrofit2.converter.gson.GsonConverterFactory
 
-object VenueClient{
-    private const val base_url = "http://10.0.2.2:3000/"
+object VenueClient {
+    // Emulator için 10.0.2.2 kullanıyoruz
+    private const val BASE_URL = "http://10.0.2.2:3000/"
 
-    private val retrofit = Retrofit.Builder()
-        .addConverterFactory(ScalarsConverterFactory.create())
-        .baseUrl(base_url)
-        .build()
-        .create(VenueApiService :: class.java) // bu sayede interface'imiz
+    val apiService: VenueApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            // DÜZELTME: JSON işlemleri için GsonConverterFactory şarttır!
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(VenueApiService::class.java)
+    }
 }

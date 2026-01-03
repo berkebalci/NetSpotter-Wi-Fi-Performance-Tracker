@@ -1,4 +1,4 @@
-package com.adsoyad.venueexplorer.data.local.dao
+package com.example.venueexplorer.data.local
 
 import androidx.room.Dao
 import androidx.room.Insert

@@ -1,30 +1,33 @@
 package com.example.venueexplorer.data.local
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.adsoyad.venueexplorer.data.local.entity.VenueEntity
 
 @Dao
 interface VenueDAO {
 
+    // Dönüş tipi List<VenueEntity> olmalı
     @Query("SELECT * from venues")
-    suspend fun getallVenues()
+    suspend fun getAllVenues(): List<VenueEntity>
 
+    // ID String olmalı (MongoDB ObjectId)
+    @Query("SELECT * from venues WHERE id = :id")
+    suspend fun getVenueById(id: String): VenueEntity?
 
-    @Query("SELECT * from venues WHERE categoryId = :categoryId")
-    fun getVenueById(categoryId: Int): VenueEntity?
-
-
-    @Insert
+    // Tekli Ekleme
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertVenue(venueEntity: VenueEntity)
 
-    @Delete
-    suspend fun deleteVenueById(id: Int)
+    // Çoklu Ekleme (Repository'de bunu kullanıyoruz)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(venues: List<VenueEntity>)
 
-    @Delete
+    // ID String olmalı
+    @Query("DELETE FROM venues WHERE id = :id")
+    suspend fun deleteVenueById(id: String)
+
+    @Query("DELETE FROM venues")
     suspend fun deleteAllVenues()
-
-
 }

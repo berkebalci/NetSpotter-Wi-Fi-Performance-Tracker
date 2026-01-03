@@ -1,4 +1,4 @@
-package com.adsoyad.venueexplorer.data.local.entity
+package com.example.venueexplorer.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
