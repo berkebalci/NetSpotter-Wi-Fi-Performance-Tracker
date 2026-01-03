@@ -1,16 +1,25 @@
-package com.example.venueexplorer.data.local
+package com.adsoyad.venueexplorer.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "venues")
 data class VenueEntity(
-    @PrimaryKey(autoGenerate = true)
-    val categoryId: Int,
-    val title: Int,
+    @PrimaryKey
+    val id: String,
+
+    val title: String,
     val description: String,
     val rating: Int,
+
+    // İLİŞKİSEL VERİ TAKTİĞİ:
+    // Kategori tablosuyla Join yapmak yerine, okuması hızlı olsun diye
+    // gerekli bilgileri buraya da kaydediyoruz (Denormalization).
+    val categoryId: String,
     val categoryName: String,
-    val latitude: Double?,
-    val longitude: Double?
+    val categoryColor: String,
+
+    // GeoLocation için (Nullable yaptık, boş gelebilir)
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )

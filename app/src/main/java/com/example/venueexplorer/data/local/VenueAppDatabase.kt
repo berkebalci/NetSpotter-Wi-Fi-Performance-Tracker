@@ -4,10 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.adsoyad.venueexplorer.data.local.entity.CategoryEntity
+import com.adsoyad.venueexplorer.data.local.entity.VenueEntity
 
-@Database(entities = [VenueEntity:: class], version = 1, exportSchema = false)
+@Database(entities = [VenueEntity:: class, CategoryEntity::class], version = 1, exportSchema = false)
 abstract class VenueAppDatabase : RoomDatabase() {
     abstract fun venueDao(): VenueDAO
+    abstract fun categoryDao(): CategoryEntity
 
     companion object{
         @Volatile //Boyle yaparak veriler cache'lenmiyor direkt ram'e aktariliyor, bu sayede tum core'lar verileri updated halleriyle gorebiliyor.
