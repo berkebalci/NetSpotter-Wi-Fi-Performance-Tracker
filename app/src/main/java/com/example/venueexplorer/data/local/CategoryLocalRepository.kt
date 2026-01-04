@@ -2,11 +2,11 @@ package com.example.venueexplorer.data.local
 
 import android.util.Log
 import com.example.venueexplorer.data.model.Category
-import com.example.venueexplorer.data.remote.VenueApiService
+import com.example.venueexplorer.data.remote.VenueExplorerApiService
 
 
 class CategoryLocalRepository(
-    private val api: VenueApiService,
+    private val api: VenueExplorerApiService,
     private val categoryDao: CategoryDao
 ) {
     private val TAG = "TAGCategoryRepo"

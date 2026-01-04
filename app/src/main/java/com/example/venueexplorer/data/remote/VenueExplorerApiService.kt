@@ -11,7 +11,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface VenueApiService {
+interface VenueExplorerApiService {
 
     // DÜZELTME: Artık VenueEntity yerine API modeli olan Venue dönüyor
     @GET("api/venues")
@@ -22,13 +22,14 @@ interface VenueApiService {
 
     @GET("api/venues/search")
     suspend fun searchVenues(@Query("q") query: String): List<Venue>
+    //response olmayinca kendisi direkt 200 oldugu zaman sadece gonderiyor, olmadigi zaman da http error'u firlatiyor.
 
     // Ekleme yaparken de API modeli yolluyoruz
     @POST("api/venues")
-    suspend fun addVenue(@Body venue: Venue): Venue
+    suspend fun addVenue(@Body venue: Venue): Response<Venue>
 
     @PUT("api/venues/{id}")
-    suspend fun updateVenue(@Path("id") id: String, @Body venue: Venue): Venue
+    suspend fun updateVenue(@Path("id") id: String, @Body venue: Venue): Response<Venue>
 
     @DELETE("api/venues/{id}")
     suspend fun deleteVenue(@Path("id") id: String): Response<Unit>

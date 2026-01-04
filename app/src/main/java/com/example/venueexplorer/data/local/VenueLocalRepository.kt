@@ -3,10 +3,10 @@ package com.example.venueexplorer.data.local
 import android.util.Log
 // Model sınıfını import etmelisin (Dosya yolu farklı olabilir)
 import com.example.venueexplorer.data.model.Venue
-import com.example.venueexplorer.data.remote.VenueApiService
+import com.example.venueexplorer.data.remote.VenueExplorerApiService
 
-class VenueRepository(
-    private val api: VenueApiService,
+class VenueLocalRepository(
+    private val api: VenueExplorerApiService,
     private val venueDao: VenueDAO
 ) {
 
@@ -30,9 +30,16 @@ class VenueRepository(
 
     suspend fun addVenue(venue: Venue) {
         try {
-            val addedVenue = api.addVenue(venue)
+            val responsee = api.addVenue(venue)
+            if(responsee.isSuccessful){
+                val addedVenue = responsee.body()
+                venueDao.insertAll(listOf(addedVenue!!.toEntity()))
+
+            }
+            else{
+                throw Exception("Ekleme başarısız: ${responsee.code()}")
+            }
             // Tek bir elemanı listeye koyup ekliyoruz
-            venueDao.insertAll(listOf(addedVenue.toEntity()))
         } catch (e: Exception) {
             Log.e(TAG, "Ekleme Hatası: ${e.message}")
             throw e
@@ -49,6 +56,19 @@ class VenueRepository(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Silme Hatası: ${e.message}")
+            throw e
+        }
+    }
+    suspend fun updateVenues(id: String,venue: Venue) {
+        try {
+            val response = api.updateVenue(id, venue)
+            if (response.isSuccessful) {
+                val updatedVenue = response.body()!!
+                venueDao.updateVenue(updatedVenue.toEntity())
+            } else {
+                throw Exception("Güncelleme başarısız: ${response.code()}")
+            }
+        } catch (e: Exception){
             throw e
         }
     }
