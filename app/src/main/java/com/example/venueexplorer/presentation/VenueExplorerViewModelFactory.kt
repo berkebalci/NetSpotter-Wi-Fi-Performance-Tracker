@@ -17,15 +17,15 @@ class VenueExplorerViewModelFactory(
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if(modelClass.isAssignableFrom(HomeScreenViewModel::class.java)){
-            return HomeScreenViewModel(venueRepository) as T
+            return HomeScreenViewModel(venueRepository,categoryRepository) as T
         }
 
         if(modelClass.isAssignableFrom(EditScreenViewModel:: class.java)){
-            return EditScreenViewModel(venueRepository,categoryRepository)
+            return EditScreenViewModel(venueRepository,categoryRepository) as T
 
         }
         if(modelClass.isAssignableFrom(DetailsScreenViewModel:: class.java)){
-
+            return DetailsScreenViewModel(venueRepository,categoryRepository) as T
         }
 
         throw IllegalArgumentException("Unknown ViewModel class")
