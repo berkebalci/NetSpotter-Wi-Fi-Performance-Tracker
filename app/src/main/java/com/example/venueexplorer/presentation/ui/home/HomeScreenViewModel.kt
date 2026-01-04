@@ -41,16 +41,41 @@ class HomeScreenViewModel (
                         )
                     }
                 }
-
-
             }
             catch (e: Exception){
                 Log.e("HomeScreenViewModel", "Hata: ${e.message}")
                 throw e
             }
-
-
-
+        }
+        fun searchVenue(query: String){
+            viewModelScope.launch {
+                try {
+                    _homeUIState.update {
+                        it.copy(isLoading = true)}
+                    if(query.isNotBlank()){
+                        val venues = venuerepository.searchVenues(query)
+                        _homeUIState.update {
+                            it.copy(
+                                venues = venues,
+                                isLoading = false
+                            )
+                        }
+                    }
+                    else{
+                        val venues = venuerepository.getVenues()
+                        _homeUIState.update {
+                            it.copy(
+                                venues = venues,
+                                isLoading = false
+                            )
+                        }
+                    }
+                }
+                catch (e: Exception){
+                    Log.e("HomeScreenViewModel", "Hata: ${e.message}")
+                    throw e
+                }
+            }
         }
     }
 
