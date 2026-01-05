@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -42,7 +44,9 @@ android {
 dependencies {
     val room_version = "2.8.4"
 
+
     implementation("androidx.room:room-runtime:$room_version")
+    implementation ("androidx.navigation:navigation-compose:2.9.6")
 
     // If this project only uses Java source, use the Java annotationProcessor
     // No additional plugins are necessary
