@@ -1,5 +1,11 @@
 package com.example.venueexplorer.presentation.ui.home
 
-fun HomeScreen() {
+import androidx.compose.runtime.Composable
+
+@Composable
+fun HomeScreen(
+    onNavigateToDetailsScreen : () -> Unit,
+    onNavigateToEditSceren: () -> Unit
+) {
 
 }
