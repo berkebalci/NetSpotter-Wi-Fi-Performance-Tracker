@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun EditScreen(
+    viewModel: EditScreenViewModel,
     onSaveButtonClicked: () -> Unit,
     onCancelButtonClicked: () -> Unit,
     modifier: Modifier = Modifier
