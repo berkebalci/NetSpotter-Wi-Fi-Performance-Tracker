@@ -93,8 +93,6 @@ class VenueLocalRepository(
             rating = rating,
             // Venue modelinde 'category' objesi nullable olabilir (?.)
             categoryId = category?.id ?: "",
-            categoryName = category?.name ?: "Genel",
-            categoryColor = category?.color ?: "#808080",
             latitude = null,
             longitude = null
         )

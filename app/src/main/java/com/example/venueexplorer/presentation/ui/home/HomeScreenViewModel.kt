@@ -1,5 +1,5 @@
-// presentation/viewmodel/HomeViewModel.kt
-package com.example.venueexplorer.presentation.viewmodel
+// presentation/viewmodel/HomeScreenViewModel.kt
+package com.example.venueexplorer.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class HomeViewModel(
+class HomeScreenViewModel(
     private val venueLocalRepository: VenueLocalRepository,
     private val categoryRepository: CategoryLocalRepository
 ) : ViewModel() {
@@ -32,17 +32,19 @@ class HomeViewModel(
             _uiState.update { it.copy(isLoading = true, isError = false) }
 
             try {
-                // Repository'den veri çek (API + Room)
-                val venues = venueLocalRepository.getVenues()
+                // ✅ 1. ÖNCE kategorileri yükle
                 val categories = categoryRepository.getAllCategories()
+                _uiState.update { it.copy(categories = categories) }
 
+                // ✅ 2. SONRA venue'ları yükle (artık foreign key'ler mevcut)
+                val venues = venueLocalRepository.getVenues()
                 _uiState.update {
                     it.copy(
                         venues = venues,
-                        categories = categories,
                         isLoading = false
                     )
                 }
+
 
             } catch (e: Exception) {
                 _uiState.update {

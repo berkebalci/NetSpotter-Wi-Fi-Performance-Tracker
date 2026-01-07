@@ -1,5 +1,5 @@
-// presentation/screen/HomeScreen.kt
-package com.example.venueexplorer.presentation.screen
+
+package com.example.venueexplorer.presentation.home
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,12 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.venueexplorer.data.local.CategoryEntity
 import com.example.venueexplorer.data.local.VenueEntity
-import com.example.venueexplorer.presentation.viewmodel.HomeViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel,
+    viewModel: HomeScreenViewModel,
     onNavigateToEditScreen: (String?) -> Unit,
     onNavigateToDetailsScreen: (String) -> Unit
 ) {

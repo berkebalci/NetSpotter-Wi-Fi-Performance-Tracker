@@ -14,7 +14,7 @@ data class Venue(
     val description: String,
 
     @SerializedName("rating")
-    val rating: Int,
+    val rating: Float,
 
     // İŞTE FARK BURADA:
     // API, kategoriyi bir obje olarak yollar.

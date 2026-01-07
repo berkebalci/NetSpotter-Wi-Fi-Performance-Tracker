@@ -9,11 +9,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.venueexplorer.data.local.AppContainer
-import com.example.venueexplorer.data.model.Venue
+
 import com.example.venueexplorer.di.VenueExplorerViewModelFactory
+import com.example.venueexplorer.presentation.home.HomeScreen
 import com.example.venueexplorer.presentation.ui.details.DetailsScreen
 import com.example.venueexplorer.presentation.ui.edit.EditScreen
-import com.example.venueexplorer.presentation.ui.home.HomeScreen
 
 @Composable
 fun VenueExplorerNavHost(
@@ -34,7 +34,7 @@ fun VenueExplorerNavHost(
                 onNavigateToDetailsScreen = {
                     navController.navigate(VenueExplorerNavDestination.Details.route)
                 },
-                onNavigateToEditSceren = {
+                onNavigateToEditScreen = {
                     navController.navigate(VenueExplorerNavDestination.Edit.route)
                 }
             )

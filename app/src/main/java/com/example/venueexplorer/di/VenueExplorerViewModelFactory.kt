@@ -6,7 +6,8 @@ import com.example.venueexplorer.data.local.CategoryLocalRepository
 import com.example.venueexplorer.data.local.VenueLocalRepository
 import com.example.venueexplorer.presentation.ui.details.DetailsScreenViewModel
 import com.example.venueexplorer.presentation.ui.edit.EditScreenViewModel
-import com.example.venueexplorer.presentation.ui.home.HomeScreenViewModel
+import com.example.venueexplorer.presentation.home.HomeScreenViewModel
+
 
 class VenueExplorerViewModelFactory(
     private val venueRepository: VenueLocalRepository,
