@@ -29,6 +29,15 @@ class CategoryLocalRepository(
     suspend fun deleteAll() {
         categoryDao.deleteAll()
     }
+    suspend fun getCategoryById(id: String): CategoryEntity? {
+        try {
+            val category = api.getCategoryById(id)
+            return category.toEntity()
+        }
+        catch (e: Error){
+            throw e
+        }
+    }
 
     private fun Category.toEntity(): CategoryEntity {
         return CategoryEntity(

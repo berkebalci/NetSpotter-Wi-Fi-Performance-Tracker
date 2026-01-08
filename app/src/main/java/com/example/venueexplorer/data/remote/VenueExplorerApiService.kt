@@ -36,4 +36,7 @@ interface VenueExplorerApiService {
 
     @GET("api/categories")
     suspend fun getCategories(): List<Category>
+
+    @GET("api/categories/{id}")
+    suspend fun getCategoryById(@Path("id") id: String): Category
 }

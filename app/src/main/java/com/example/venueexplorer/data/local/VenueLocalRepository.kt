@@ -27,6 +27,18 @@ class VenueLocalRepository(
         }
         return venueDao.getAllVenues()
     }
+    suspend fun getVenueById(id: String): VenueEntity? {
+        try {
+            val remoteVenueById = api.getVenueById(id)
+            val venues = remoteVenueById.toEntity()
+            return  venues
+
+        }
+        catch (e: Error){
+            throw e
+        }
+
+    }
 
     suspend fun addVenue(venue: Venue) {
         try {

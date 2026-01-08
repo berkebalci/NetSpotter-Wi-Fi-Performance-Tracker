@@ -1,6 +1,7 @@
 
 package com.example.venueexplorer.presentation.home
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -169,6 +170,7 @@ fun HomeScreen(
                                 val category = uiState.categories.find {
                                     it.id == venue.categoryId
                                 }
+                                Log.e("Burna","VenueId ${venue.id}")
 
                                 VenueCard(
                                     venue = venue,
@@ -428,7 +430,7 @@ fun VenueCard(
                 }
 
                 Text(
-                    text = "ID: ${venue.id.take(6)}...",
+                    text = "ID: ${venue.id}",
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray
                 )
