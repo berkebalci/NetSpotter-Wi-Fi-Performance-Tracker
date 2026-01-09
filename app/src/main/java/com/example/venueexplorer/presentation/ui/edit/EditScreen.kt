@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditScreen(
+    venueId: String,
     viewModel: EditScreenViewModel,
     onSaveButtonClicked: () -> Unit,
     onCancelButtonClicked: () -> Unit,
@@ -27,6 +28,9 @@ fun EditScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     // Kayıt başarılı olduğunda callback çağır
+    LaunchedEffect(venueId) {
+        viewModel.loadVenueForEditing(venueId)
+    }
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
             onSaveButtonClicked()

@@ -24,7 +24,7 @@ fun DetailsScreen(
     venueId: String,
     viewModel: DetailsScreenViewModel,
     onBackClicked: () -> Unit,
-    onEditButtonClicked: () -> Unit,
+    onEditButtonClicked: (venueId: String) -> Unit,
     onMapContainerClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -52,7 +52,7 @@ fun DetailsScreen(
                 actions = {
                     // Edit Button
                     IconButton(
-                        onClick = onEditButtonClicked,
+                        onClick = {onEditButtonClicked(venueId)},
                         enabled = !uiState.isLoading && uiState.venue != null
                     ) {
                         Icon(
@@ -424,7 +424,7 @@ fun DetailsScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             OutlinedButton(
-                                onClick = onEditButtonClicked,
+                                onClick = { onEditButtonClicked(venueId) },
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Icon(

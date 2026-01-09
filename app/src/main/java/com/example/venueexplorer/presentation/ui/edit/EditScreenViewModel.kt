@@ -1,4 +1,5 @@
 package com.example.venueexplorer.presentation.ui.edit
+import android.content.ContentValues.TAG
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.venueexplorer.data.local.CategoryLocalRepository
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class EditScreenViewModel(
     private val venueLocalRepository: VenueLocalRepository,
@@ -21,7 +23,7 @@ class EditScreenViewModel(
 
     init {
         loadCategories()
-        //loadVenueForEditing()
+
     }
 
     // ═══════════════════════════════════════════════════════
@@ -66,6 +68,7 @@ class EditScreenViewModel(
     // LOAD VENUE FOR EDITING
     // ═══════════════════════════════════════════════════════
     fun loadVenueForEditing(venueId: String) {
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, isEditMode = true, venueId = venueId) }
 
@@ -199,9 +202,13 @@ class EditScreenViewModel(
 
                 if (state.isEditMode && state.venueId != null) {
                     // UPDATE
+                    Log.e(TAG, "VenueLocal repo UPDATE VENUE calisti")
                     venueLocalRepository.updateVenues(state.venueId, venueRequest)
                 } else {
                     // INSERT
+                    Log.e(TAG, state.isEditMode.toString())
+
+                    Log.e(TAG, "VenueLocal repo add venue calisti")
                     venueLocalRepository.addVenue(venueRequest)
                 }
 

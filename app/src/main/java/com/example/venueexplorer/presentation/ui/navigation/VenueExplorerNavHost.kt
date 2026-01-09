@@ -35,8 +35,8 @@ fun VenueExplorerNavHost(
                 onNavigateToDetailsScreen = { venueId ->
                     navController.navigate(VenueExplorerNavDestination.Details.createRoute(venueId))
                 },
-                onNavigateToEditScreen = {
-                    navController.navigate(VenueExplorerNavDestination.Edit.route)
+                onNavigateToEditScreen = { venueId ->
+                    navController.navigate(VenueExplorerNavDestination.Edit.createRoute(venueId = venueId!!))
                 }
             )
         }
@@ -53,19 +53,28 @@ fun VenueExplorerNavHost(
                 onBackClicked =  {
                     navController.popBackStack()
                 },
-            onEditButtonClicked =  {
-                navController.navigate(VenueExplorerNavDestination.Edit.route)
+            onEditButtonClicked =  { venueId->
+                navController.navigate(VenueExplorerNavDestination.Edit.createRoute(venueId))
             },
             onMapContainerClicked = {
 
             },
             )
         }
-        composable(route = VenueExplorerNavDestination.Edit.route){
+        composable(route = VenueExplorerNavDestination.Edit.route,
+            arguments = listOf(
+                navArgument("venueId") {
+                    type = NavType.StringType
+                })) { backStackEntry ->
+            val venueId = backStackEntry.arguments?.getString("venueId") ?: return@composable
+            Log.e("Navigation Sirasinda", "navigation VenueId is : $venueId")
             EditScreen(
-                viewModel = viewModel(factory = viewModelFactory),
+                venueId = venueId
+                ,viewModel = viewModel(factory = viewModelFactory),
                 onSaveButtonClicked ={} ,
-            onCancelButtonClicked = {},
+            onCancelButtonClicked = {
+                navController.popBackStack()
+            },
 
             )
         }
