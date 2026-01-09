@@ -37,8 +37,14 @@ fun VenueExplorerNavHost(
                 },
                 onNavigateToEditScreen = { venueId ->
                     navController.navigate(VenueExplorerNavDestination.Edit.createRoute(venueId = venueId!!))
+                },
+                onNavigateToAddVenue = {
+                    // FAB'a basınca Add rotasına git
+                    navController.navigate(VenueExplorerNavDestination.Add.route)
                 }
+
             )
+
         }
         composable(route = VenueExplorerNavDestination.Details.route,
             arguments = listOf(
@@ -59,6 +65,14 @@ fun VenueExplorerNavHost(
             onMapContainerClicked = {
 
             },
+            )
+        }
+        composable(route = VenueExplorerNavDestination.Add.route) {
+            EditScreen(
+                venueId = null, // ID göndermiyoruz!
+                viewModel = viewModel(factory = viewModelFactory),
+                onSaveButtonClicked = { navController.popBackStack() },
+                onCancelButtonClicked = { navController.popBackStack() }
             )
         }
         composable(route = VenueExplorerNavDestination.Edit.route,

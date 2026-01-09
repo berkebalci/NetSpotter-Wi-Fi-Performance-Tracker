@@ -1,6 +1,7 @@
 // presentation/viewmodel/HomeScreenViewModel.kt
 package com.example.venueexplorer.presentation.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.venueexplorer.data.local.CategoryLocalRepository
@@ -86,6 +87,7 @@ class HomeScreenViewModel(
 
         viewModelScope.launch {
             try {
+                Log.e("Query Search", "Query: $query")
                 if (query.isBlank()) {
                     // Arama boşsa tüm mekanları göster
                     loadData()

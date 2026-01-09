@@ -90,6 +90,7 @@ class VenueLocalRepository(
 
     suspend fun searchVenues(query: String): List<VenueEntity> {
         return try {
+            Log.e("SearchVenues metodu", "metod calisti")
             val searchResults = api.searchVenues(query)
             searchResults.map { it.toEntity() }
         } catch (e: Exception) {

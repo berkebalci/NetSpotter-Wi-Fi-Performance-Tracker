@@ -1,167 +1,96 @@
-
 package com.example.venueexplorer.presentation.home
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Coffee
+import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.Museum
+import androidx.compose.material.icons.outlined.Park
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.venueexplorer.data.local.CategoryEntity
 import com.example.venueexplorer.data.local.VenueEntity
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeScreenViewModel,
     onNavigateToEditScreen: (String?) -> Unit,
-    onNavigateToDetailsScreen: (String) -> Unit
+    onNavigateToDetailsScreen: (String) -> Unit,
+    onNavigateToAddVenue: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showSearchBar by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("🏛️ API Test Dashboard") },
-                actions = {
-                    IconButton(onClick = { showSearchBar = !showSearchBar }) {
-                        Icon(Icons.Default.Search, contentDescription = "Ara")
-                    }
-                    IconButton(onClick = { viewModel.refreshData() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Yenile")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onNavigateToEditScreen(null) },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Yeni Mekan Ekle")
-            }
-        }
-    ) { padding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+            modifier = Modifier.fillMaxSize()
         ) {
-            if (showSearchBar) {
-                SearchBar(
-                    query = uiState.searchQuery,
-                    onQueryChange = { viewModel.searchVenues(it) },
-                    onClose = {
-                        showSearchBar = false
-                        viewModel.searchVenues("")
-                    }
-                )
-            }
+            // Header Section
+            ModernHeader()
 
+            // Search Bar
+            ModernSearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = { viewModel.searchVenues(it) }
+            )
+
+            // Category Filter Chips
             if (uiState.categories.isNotEmpty()) {
-                CategoryFilterRow(
+                ModernCategoryFilter(
                     categories = uiState.categories,
                     onCategorySelected = { viewModel.filterByCategory(it) }
                 )
             }
 
-            ApiStatsCard(
-                totalVenues = uiState.venues.size,
-                totalCategories = uiState.categories.size,
-                isLoading = uiState.isLoading
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
+            // Venue List
             Box(modifier = Modifier.weight(1f)) {
                 when {
                     uiState.isLoading -> {
-                        Column(
-                            modifier = Modifier.align(Alignment.Center),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("API'den veri çekiliyor...")
-                        }
+                        LoadingState()
                     }
 
                     uiState.isError -> {
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = uiState.errorMessage ?: "Bilinmeyen hata",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(onClick = {
+                        ErrorState(
+                            errorMessage = uiState.errorMessage,
+                            onRetry = {
                                 viewModel.clearError()
                                 viewModel.refreshData()
-                            }) {
-                                Text("Tekrar Dene")
                             }
-                        }
+                        )
                     }
 
                     uiState.venues.isEmpty() -> {
-                        Column(
-                            modifier = Modifier.align(Alignment.Center),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = Color.Gray
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = if (uiState.searchQuery.isNotBlank()) {
-                                    "\"${uiState.searchQuery}\" için sonuç bulunamadı"
-                                } else {
-                                    "Henüz mekan yok"
-                                },
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = { onNavigateToEditScreen(null) }) {
-                                Text("İlk Mekanı Ekle")
-                            }
-                        }
+                        EmptyState(
+                            searchQuery = uiState.searchQuery,
+                            onAddClick = { onNavigateToEditScreen(null) }
+                        )
                     }
 
                     else -> {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items(
                                 items = uiState.venues,
@@ -170,18 +99,88 @@ fun HomeScreen(
                                 val category = uiState.categories.find {
                                     it.id == venue.categoryId
                                 }
-                                Log.e("Burna","VenueId ${venue.id}")
+                                Log.e("HomeScreen", "VenueId ${venue.id}")
 
-                                VenueCard(
+                                ModernVenueCard(
                                     venue = venue,
                                     category = category,
                                     onClick = { onNavigateToDetailsScreen(venue.id) },
                                     onDelete = { viewModel.deleteVenue(venue.id) }
                                 )
                             }
+
+                            // Bottom padding for FAB
+                            item {
+                                Spacer(modifier = Modifier.height(80.dp))
+                            }
                         }
                     }
                 }
+            }
+        }
+
+        // Floating Action Button
+        FloatingActionButton(
+            onClick = { onNavigateToAddVenue() },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(24.dp),
+            containerColor = Color(0xFF2196F3),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add Venue",
+                tint = Color.White,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernHeader() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(horizontal = 20.dp, vertical = 50.dp)
+    ) {
+        Text(
+            text = "WELCOME BACK",
+            style = MaterialTheme.typography.labelMedium,
+            color = Color(0xFF9E9E9E),
+            fontSize = 12.sp,
+            letterSpacing = 1.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Venue Explorer",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                color = Color(0xFF212121)
+            )
+
+            // Profile Icon
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFD7B899)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Profile",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
             }
         }
     }
@@ -189,31 +188,42 @@ fun HomeScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBar(
+fun ModernSearchBar(
     query: String,
-    onQueryChange: (String) -> Unit,
-    onClose: () -> Unit
+    onQueryChange: (String) -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = null,
-                modifier = Modifier.padding(start = 8.dp)
+                tint = Color(0xFF9E9E9E),
+                modifier = Modifier.size(24.dp)
             )
+
             TextField(
                 value = query,
                 onValueChange = onQueryChange,
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Mekan ara...") },
+                placeholder = {
+                    Text(
+                        text = "Find a venue, coffee, gym...",
+                        color = Color(0xFFBDBDBD),
+                        fontSize = 15.sp
+                    )
+                },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
@@ -222,132 +232,100 @@ fun SearchBar(
                 ),
                 singleLine = true
             )
-            IconButton(onClick = onClose) {
-                Icon(Icons.Default.Close, contentDescription = "Kapat")
-            }
+
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Filter",
+                tint = Color(0xFF9E9E9E),
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategoryFilterRow(
+fun ModernCategoryFilter(
     categories: List<CategoryEntity>,
     onCategorySelected: (String?) -> Unit
 ) {
     var selectedCategoryId by remember { mutableStateOf<String?>(null) }
 
     LazyRow(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // "All" chip
         item {
-            FilterChip(
-                selected = selectedCategoryId == null,
+            ModernCategoryChip(
+                label = "All",
+                icon = Icons.Default.Apps,
+                isSelected = selectedCategoryId == null,
+                color = Color(0xFF212121),
                 onClick = {
                     selectedCategoryId = null
                     onCategorySelected(null)
-                },
-                label = { Text("Tümü") },
-                leadingIcon = {
-                    if (selectedCategoryId == null) {
-                        Icon(Icons.Default.Check, contentDescription = null)
-                    }
                 }
             )
         }
 
+        // Category chips
         items(categories) { category ->
-            FilterChip(
-                selected = selectedCategoryId == category.id,
+            ModernCategoryChip(
+                label = category.name,
+                icon = getCategoryIcon(category.iconName),
+                isSelected = selectedCategoryId == category.id,
+                color = Color(android.graphics.Color.parseColor(category.color)),
                 onClick = {
                     selectedCategoryId = category.id
                     onCategorySelected(category.id)
-                },
-                label = { Text(category.name) },
-                leadingIcon = {
-                    if (selectedCategoryId == category.id) {
-                        Icon(Icons.Default.Check, contentDescription = null)
-                    }
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Color(
-                        android.graphics.Color.parseColor(category.color)
-                    ).copy(alpha = 0.7f)
-                )
+                }
             )
         }
     }
 }
 
 @Composable
-fun ApiStatsCard(
-    totalVenues: Int,
-    totalCategories: Int,
-    isLoading: Boolean
+fun ModernCategoryChip(
+    label: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    color: Color,
+    onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+            .height(48.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(24.dp),
+        color = if (isSelected) color else Color.White,
+        shadowElevation = if (isSelected) 4.dp else 1.dp
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceAround
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            StatItem(
-                icon = Icons.Default.Place,
-                label = "Mekanlar",
-                value = totalVenues.toString()
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isSelected) Color.White else color,
+                modifier = Modifier.size(20.dp)
             )
-            StatItem(
-                icon = Icons.Default.List,
-                label = "Kategoriler",
-                value = totalCategories.toString()
-            )
-            StatItem(
-                icon = if (isLoading) Icons.Default.Refresh else Icons.Default.CheckCircle,
-                label = "API Durumu",
-                value = if (isLoading) "Yükleniyor" else "Aktif"
+            Text(
+                text = label,
+                color = if (isSelected) Color.White else Color(0xFF424242),
+                fontSize = 15.sp,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
             )
         }
     }
 }
 
 @Composable
-fun StatItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    value: String
-) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
-        )
-    }
-}
-
-@Composable
-fun VenueCard(
+fun ModernVenueCard(
     venue: VenueEntity,
     category: CategoryEntity?,
     onClick: () -> Unit,
@@ -355,94 +333,145 @@ fun VenueCard(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        shadowElevation = 3.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            // Venue Image Placeholder
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        category?.let {
+                            Color(android.graphics.Color.parseColor(it.color)).copy(alpha = 0.2f)
+                        } ?: Color(0xFFE0E0E0)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = category?.let { getCategoryIcon(it.iconName) }
+                        ?: Icons.Default.Place,
+                    contentDescription = null,
+                    tint = category?.let {
+                        Color(android.graphics.Color.parseColor(it.color))
+                    } ?: Color(0xFF757575),
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+
+            // Venue Details
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 4.dp)
+            ) {
                 Text(
                     text = venue.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color(0xFF212121)
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-                Text(
-                    text = venue.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray,
-                    maxLines = 2
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = Color(0xFF757575),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = venue.description.take(30) + if (venue.description.length > 30) "..." else "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF757575),
+                        fontSize = 14.sp
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Rating Row
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (category != null) {
-                        Surface(
-                            color = Color(android.graphics.Color.parseColor(category.color)),
-                            shape = MaterialTheme.shapes.small
-                        ) {
-                            Text(
-                                text = category.name,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = String.format("%.1f", venue.rating),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color(0xFF212121)
+                        )
+
+                        // Star Icons
+                        repeat(5) { index ->
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = if (index < venue.rating.toInt()) Color(0xFFFFA000) else Color(0xFFE0E0E0),
+                                modifier = Modifier.size(16.dp)
                             )
                         }
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = Color(0xFFFFA000),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = " ${venue.rating}/5",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFFFFA000)
-                        )
                     }
                 }
             }
 
-            Column(horizontalAlignment = Alignment.End) {
-                IconButton(onClick = { showDeleteDialog = true }) {
+            // Category Icon Badge
+            if (category != null) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Color(android.graphics.Color.parseColor(category.color)).copy(alpha = 0.15f)
+                        )
+                        .clickable { showDeleteDialog = true },
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Sil",
-                        tint = MaterialTheme.colorScheme.error
+                        imageVector = getCategoryIcon(category.iconName),
+                        contentDescription = null,
+                        tint = Color(android.graphics.Color.parseColor(category.color)),
+                        modifier = Modifier.size(24.dp)
                     )
                 }
-
-                Text(
-                    text = "ID: ${venue.id}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray
-                )
             }
         }
     }
 
+    // Delete Dialog
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Mekanı Sil") },
-            text = { Text("${venue.title} mekanını silmek istediğinize emin misiniz?") },
+            title = {
+                Text(
+                    text = "Delete Venue",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Are you sure you want to delete ${venue.title}?")
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -450,14 +479,148 @@ fun VenueCard(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("Sil", color = MaterialTheme.colorScheme.error)
+                    Text("Delete", color = Color(0xFFE53935))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("İptal")
+                    Text("Cancel")
+                }
+            },
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
+}
+
+@Composable
+fun LoadingState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator(
+                color = Color(0xFF2196F3),
+                modifier = Modifier.size(48.dp)
+            )
+            Text(
+                text = "Loading venues...",
+                color = Color(0xFF757575),
+                fontSize = 16.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun ErrorState(
+    errorMessage: String?,
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = Color(0xFFE53935),
+                modifier = Modifier.size(64.dp)
+            )
+            Text(
+                text = errorMessage ?: "Something went wrong",
+                color = Color(0xFF424242),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2196F3)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Retry")
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyState(
+    searchQuery: String,
+    onAddClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocationOff,
+                contentDescription = null,
+                tint = Color(0xFFBDBDBD),
+                modifier = Modifier.size(80.dp)
+            )
+            Text(
+                text = if (searchQuery.isNotBlank()) {
+                    "No results for \"$searchQuery\""
+                } else {
+                    "No venues yet"
+                },
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF424242)
+            )
+            Text(
+                text = if (searchQuery.isNotBlank()) {
+                    "Try a different search"
+                } else {
+                    "Add your first venue to get started"
+                },
+                fontSize = 14.sp,
+                color = Color(0xFF757575)
+            )
+            if (searchQuery.isBlank()) {
+                Button(
+                    onClick = onAddClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2196F3)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Add First Venue")
                 }
             }
-        )
+        }
+    }
+}
+
+// Helper function to get category icons
+fun getCategoryIcon(iconName: String): ImageVector {
+    return when (iconName.lowercase()) {
+        "coffee" -> Icons.Outlined.Coffee
+        "restaurant" -> Icons.Outlined.Restaurant
+        "museum" -> Icons.Outlined.Museum
+        "park" -> Icons.Outlined.Park
+        else -> Icons.Default.Place
     }
 }

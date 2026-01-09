@@ -5,6 +5,7 @@ sealed class VenueExplorerNavDestination(val route: String) {
     data object Edit: VenueExplorerNavDestination("EditScreen/{venueId}"){
         fun createRoute(venueId: String) = "EditScreen/$venueId"
     }
+    data object Add : VenueExplorerNavDestination("AddScreen")
     data object Details: VenueExplorerNavDestination("DetailsScreen/{venueId}"){
         fun createRoute(venueId: String) = "DetailsScreen/$venueId"
     }

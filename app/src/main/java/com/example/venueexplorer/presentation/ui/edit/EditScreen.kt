@@ -1,25 +1,31 @@
 package com.example.venueexplorer.presentation.ui.edit
 
-// presentation/screen/EditScreen.kt
-
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditScreen(
-    venueId: String,
+    venueId: String?,
     viewModel: EditScreenViewModel,
     onSaveButtonClicked: () -> Unit,
     onCancelButtonClicked: () -> Unit,
@@ -29,392 +35,695 @@ fun EditScreen(
 
     // Kayıt başarılı olduğunda callback çağır
     LaunchedEffect(venueId) {
-        viewModel.loadVenueForEditing(venueId)
+        venueId?.let { id ->
+            viewModel.loadVenueForEditing(id)
+        }
     }
+
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
             onSaveButtonClicked()
         }
     }
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = if (uiState.isEditMode) "Mekan Düzenle" else "Yeni Mekan Ekle",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onCancelButtonClicked) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "İptal"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { viewModel.saveVenue() },
-                        enabled = !uiState.isSaving && !uiState.isLoading
-                    ) {
-                        if (uiState.isSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Kaydet"
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when {
-                // ═══════════════════════════════════════════════════════
-                // LOADING STATE
-                // ═══════════════════════════════════════════════════════
-                uiState.isLoading -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = if (uiState.isEditMode) "Mekan yükleniyor..." else "Kategoriler yükleniyor...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
-                        )
-                    }
-                }
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF6F7F8))
+    ) {
+        when {
+            // ═══════════════════════════════════════════════════════
+            // LOADING STATE
+            // ═══════════════════════════════════════════════════════
+            uiState.isLoading -> {
+                ModernLoadingState()
+            }
 
-                // ═══════════════════════════════════════════════════════
-                // FORM
-                // ═══════════════════════════════════════════════════════
-                else -> {
+            // ═══════════════════════════════════════════════════════
+            // FORM
+            // ═══════════════════════════════════════════════════════
+            else -> {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Top App Bar
+                    ModernEditTopBar(
+                        title = if (uiState.isEditMode) "Edit Venue" else "Add New Venue",
+                        onCancelClick = onCancelButtonClicked,
+                        isSaving = uiState.isSaving
+                    )
+
+                    // Scrollable Content
                     Column(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .weight(1f)
                             .verticalScroll(rememberScrollState())
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 100.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
-                        // ───────────────────────────────────────────────
-                        // ERROR MESSAGE
-                        // ───────────────────────────────────────────────
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Error Message
                         if (uiState.isError) {
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.errorContainer
-                                ),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Warning,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = uiState.errorMessage ?: "Bilinmeyen hata",
-                                            color = MaterialTheme.colorScheme.onErrorContainer,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    }
-                                    IconButton(onClick = { viewModel.clearError() }) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = "Kapat",
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
-                            }
+                            ModernErrorCard(
+                                errorMessage = uiState.errorMessage ?: "Unknown error",
+                                onDismiss = { viewModel.clearError() }
+                            )
                         }
 
-                        // ───────────────────────────────────────────────
-                        // TITLE FIELD
-                        // ───────────────────────────────────────────────
-                        OutlinedTextField(
+                        // Photo Upload Placeholder
+                        ModernPhotoPlaceholder()
+
+                        // Venue Name Input
+                        ModernVenueNameInput(
                             value = uiState.title,
                             onValueChange = { viewModel.updateTitle(it) },
-                            label = { Text("Mekan Adı *") },
-                            placeholder = { Text("Örn: Espresso Lab") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Place,
-                                    contentDescription = null
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            enabled = !uiState.isSaving,
-                            supportingText = {
-                                Text("${uiState.title.length} / 100 karakter")
-                            },
-                            isError = uiState.title.length > 100
+                            enabled = !uiState.isSaving
                         )
 
-                        // ───────────────────────────────────────────────
-                        // DESCRIPTION FIELD
-                        // ───────────────────────────────────────────────
-                        OutlinedTextField(
+                        // Category Selection
+                        ModernCategorySelection(
+                            categories = uiState.categories,
+                            selectedCategoryId = uiState.selectedCategoryId,
+                            onCategorySelected = { viewModel.selectCategory(it) },
+                            enabled = !uiState.isSaving
+                        )
+
+                        // Rating Section
+                        ModernRatingCard(
+                            rating = uiState.rating,
+                            onRatingChange = { viewModel.updateRating(it) },
+                            enabled = !uiState.isSaving
+                        )
+
+                        // Description Input
+                        ModernDescriptionInput(
                             value = uiState.description,
                             onValueChange = { viewModel.updateDescription(it) },
-                            label = { Text("Açıklama") },
-                            placeholder = { Text("Mekan hakkında bilgi ekleyin...") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = null
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(150.dp),
-                            maxLines = 6,
-                            enabled = !uiState.isSaving,
-                            supportingText = {
-                                Text("${uiState.description.length} / 500 karakter")
-                            },
-                            isError = uiState.description.length > 500
+                            enabled = !uiState.isSaving
                         )
 
-                        // ───────────────────────────────────────────────
-                        // RATING SLIDER
-                        // ───────────────────────────────────────────────
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.Star,
-                                            contentDescription = null,
-                                            tint = Color(0xFFFFA000)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "Puan",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-
-                                    Surface(
-                                        color = Color(0xFFFFA000),
-                                        shape = MaterialTheme.shapes.medium
-                                    ) {
-                                        Text(
-                                            text = String.format("%.1f / 5.0", uiState.rating),
-                                            modifier = Modifier.padding(
-                                                horizontal = 12.dp,
-                                                vertical = 6.dp
-                                            ),
-                                            color = Color.White,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Slider(
-                                    value = uiState.rating,
-                                    onValueChange = { viewModel.updateRating(it) },
-                                    valueRange = 0f..5f,
-                                    steps = 9,
-                                    enabled = !uiState.isSaving,
-                                    colors = SliderDefaults.colors(
-                                        thumbColor = Color(0xFFFFA000),
-                                        activeTrackColor = Color(0xFFFFA000)
-                                    )
-                                )
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    repeat(6) { index ->
-                                        Text(
-                                            text = index.toString(),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color.Gray
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // ───────────────────────────────────────────────
-                        // CATEGORY SELECTION
-                        // ───────────────────────────────────────────────
-                        Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.List,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Kategori *",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            if (uiState.categories.isEmpty()) {
-                                Card(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.errorContainer
-                                    )
-                                ) {
-                                    Text(
-                                        text = "Kategori bulunamadı. Lütfen internet bağlantınızı kontrol edin.",
-                                        modifier = Modifier.padding(16.dp),
-                                        color = MaterialTheme.colorScheme.onErrorContainer
-                                    )
-                                }
-                            } else {
-                                uiState.categories.forEach { category ->
-                                    val isSelected = uiState.selectedCategoryId == category.id
-
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 4.dp),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = if (isSelected) {
-                                                Color(android.graphics.Color.parseColor(category.color))
-                                                    .copy(alpha = 0.9f)
-                                            } else {
-                                                MaterialTheme.colorScheme.surface
-                                            }
-                                        ),
-                                        border = if (isSelected) null else CardDefaults.outlinedCardBorder(),
-                                        onClick = {
-                                            if (!uiState.isSaving) {
-                                                viewModel.selectCategory(category.id)
-                                            }
-                                        }
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(16.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = category.name,
-                                                style = MaterialTheme.typography.titleMedium,
-                                                color = if (isSelected) Color.White else Color.Black,
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                            )
-
-                                            if (isSelected) {
-                                                Icon(
-                                                    imageVector = Icons.Default.CheckCircle,
-                                                    contentDescription = "Seçili",
-                                                    tint = Color.White
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // ───────────────────────────────────────────────
-                        // ACTION BUTTONS
-                        // ───────────────────────────────────────────────
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            OutlinedButton(
-                                onClick = onCancelButtonClicked,
-                                modifier = Modifier.weight(1f),
-                                enabled = !uiState.isSaving
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = null
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("İptal")
-                            }
-
-                            Button(
-                                onClick = { viewModel.saveVenue() },
-                                modifier = Modifier.weight(1f),
-                                enabled = !uiState.isSaving && uiState.categories.isNotEmpty(),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                )
-                            ) {
-                                if (uiState.isSaving) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        color = Color.White,
-                                        strokeWidth = 2.dp
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = null
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                }
-                                Text(
-                                    text = if (uiState.isEditMode) "Güncelle" else "Kaydet"
-                                )
-                            }
-                        }
-
-                        // Bottom spacing
-                        Spacer(modifier = Modifier.height(16.dp))
+                        // Location Info (Placeholder)
+                        ModernLocationCard()
                     }
+
+                    // Fixed Save Button
+                    ModernSaveButton(
+                        isEditMode = uiState.isEditMode,
+                        isSaving = uiState.isSaving,
+                        isEnabled = !uiState.isSaving && uiState.categories.isNotEmpty(),
+                        onClick = { viewModel.saveVenue() }
+                    )
                 }
             }
         }
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// COMPOSABLE COMPONENTS
+// ═══════════════════════════════════════════════════════
+
+@Composable
+fun ModernEditTopBar(
+    title: String,
+    onCancelClick: () -> Unit,
+    isSaving: Boolean
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        color = Color(0xFFF6F7F8).copy(alpha = 0.8f),
+        shadowElevation = 0.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Cancel Button
+            TextButton(
+                onClick = onCancelClick,
+                enabled = !isSaving
+            ) {
+                Text(
+                    text = "Cancel",
+                    color = Color(0xFF2196F3),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            // Title
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontSize = 17.sp,
+                color = Color(0xFF212121)
+            )
+
+            // Empty spacer for centering
+            Spacer(modifier = Modifier.width(60.dp))
+        }
+    }
+}
+
+@Composable
+fun ModernPhotoPlaceholder() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color(0xFFE3E8EF))
+            .clickable { /* Photo picker action */ },
+        contentAlignment = Alignment.Center
+    ) {
+        // Gradient overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF2196F3).copy(alpha = 0.05f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.AddAPhoto,
+                contentDescription = "Add Photo",
+                tint = Color(0xFF8B95A5),
+                modifier = Modifier.size(48.dp)
+            )
+            Text(
+                text = "Add Venue Photo",
+                color = Color(0xFF8B95A5),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernVenueNameInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    enabled: Boolean
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Venue Name",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF424242),
+            modifier = Modifier.padding(start = 4.dp)
+        )
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = Color.White,
+            shadowElevation = 1.dp
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                TextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = Modifier.weight(1f),
+                    placeholder = {
+                        Text(
+                            text = "e.g. The Coffee Spot",
+                            color = Color(0xFFBDBDBD)
+                        )
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+                    singleLine = true,
+                    enabled = enabled,
+                    textStyle = MaterialTheme.typography.bodyLarge
+                )
+
+                Icon(
+                    imageVector = Icons.Default.Storefront,
+                    contentDescription = null,
+                    tint = Color(0xFFBDBDBD),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernCategorySelection(
+    categories: List<com.example.venueexplorer.data.local.CategoryEntity>,
+    selectedCategoryId: String?,
+    onCategorySelected: (String) -> Unit,
+    enabled: Boolean
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Category",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF212121),
+            modifier = Modifier.padding(start = 4.dp)
+        )
+
+        if (categories.isEmpty()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFFFFEBEE)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = Color(0xFFE53935)
+                    )
+                    Text(
+                        text = "No categories available",
+                        color = Color(0xFFE53935),
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        } else {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp)
+            ) {
+                items(categories) { category ->
+                    ModernCategoryChip(
+                        category = category,
+                        isSelected = selectedCategoryId == category.id,
+                        onClick = { onCategorySelected(category.id) },
+                        enabled = enabled
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernCategoryChip(
+    category: com.example.venueexplorer.data.local.CategoryEntity,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    enabled: Boolean
+) {
+    Surface(
+        modifier = Modifier
+            .height(40.dp)
+            .clickable(enabled = enabled, onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        color = if (isSelected) Color(0xFF2196F3) else Color.White,
+        shadowElevation = if (isSelected) 2.dp else 1.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = getCategoryIcon(category.iconName),
+                contentDescription = null,
+                tint = if (isSelected) Color.White else Color(0xFF757575),
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = category.name,
+                color = if (isSelected) Color.White else Color(0xFF424242),
+                fontSize = 14.sp,
+                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernRatingCard(
+    rating: Float,
+    onRatingChange: (Float) -> Unit,
+    enabled: Boolean
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        shadowElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Your Rating",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF212121)
+                )
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFF2196F3).copy(alpha = 0.1f)
+                ) {
+                    Text(
+                        text = String.format("%.1f", rating),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = Color(0xFF2196F3),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+
+            // Star Display
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(5) { index ->
+                    IconButton(
+                        onClick = {
+                            if (enabled) {
+                                onRatingChange((index + 1).toFloat())
+                            }
+                        },
+                        enabled = enabled,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (index < rating.toInt()) Icons.Default.Star else Icons.Outlined.StarOutline,
+                            contentDescription = null,
+                            tint = if (index < rating.toInt()) Color(0xFFFFA000) else Color(0xFFE0E0E0),
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                }
+            }
+
+            // Progress Bar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(Color(0xFFF5F5F5))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(rating / 5f)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(Color(0xFF2196F3))
+                )
+            }
+
+            // Hint Text
+            Text(
+                text = "Tap stars to rate",
+                fontSize = 12.sp,
+                color = Color(0xFF9E9E9E),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernDescriptionInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    enabled: Boolean
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Description & Notes",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFF424242),
+            modifier = Modifier.padding(start = 4.dp)
+        )
+
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = Color.White,
+            shadowElevation = 1.dp
+        ) {
+            TextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp),
+                placeholder = {
+                    Text(
+                        text = "What did you like about this place? Any tips?",
+                        color = Color(0xFFBDBDBD),
+                        fontSize = 16.sp
+                    )
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                ),
+                enabled = enabled,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    lineHeight = 24.sp
+                )
+            )
+        }
+    }
+}
+
+@Composable
+fun ModernLocationCard() {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        shadowElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color(0xFFF5F5F5)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = null,
+                    tint = Color(0xFF757575),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = "Current Location",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF212121)
+                )
+                Text(
+                    text = "Fetching coordinates...",
+                    fontSize = 12.sp,
+                    color = Color(0xFF757575)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernSaveButton(
+    isEditMode: Boolean,
+    isSaving: Boolean,
+    isEnabled: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color(0xFFF6F7F8).copy(alpha = 0.98f),
+        shadowElevation = 8.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .padding(bottom = 16.dp)
+        ) {
+            Button(
+                onClick = onClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2196F3),
+                    disabledContainerColor = Color(0xFFBDBDBD)
+                ),
+                enabled = isEnabled
+            ) {
+                if (isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = if (isEditMode) "Update Venue" else "Save Venue",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernErrorCard(
+    errorMessage: String,
+    onDismiss: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFFFFEBEE),
+        shadowElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = Color(0xFFE53935),
+                modifier = Modifier.size(24.dp)
+            )
+
+            Text(
+                text = errorMessage,
+                modifier = Modifier.weight(1f),
+                color = Color(0xFFE53935),
+                fontSize = 14.sp,
+                lineHeight = 20.sp
+            )
+
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Dismiss",
+                    tint = Color(0xFFE53935),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernLoadingState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator(
+                color = Color(0xFF2196F3),
+                modifier = Modifier.size(48.dp)
+            )
+            Text(
+                text = "Loading...",
+                color = Color(0xFF757575),
+                fontSize = 16.sp
+            )
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPER FUNCTIONS
+// ═══════════════════════════════════════════════════════
+
+fun getCategoryIcon(iconName: String): ImageVector {
+    return when (iconName.lowercase()) {
+        "coffee" -> Icons.Outlined.Coffee
+        "restaurant" -> Icons.Outlined.Restaurant
+        "museum" -> Icons.Outlined.Museum
+        "park" -> Icons.Outlined.Park
+        else -> Icons.Default.Place
     }
 }
