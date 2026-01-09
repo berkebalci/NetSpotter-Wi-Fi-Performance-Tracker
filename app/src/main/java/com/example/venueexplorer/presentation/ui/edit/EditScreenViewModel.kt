@@ -3,9 +3,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.venueexplorer.data.local.CategoryLocalRepository
 import com.example.venueexplorer.data.local.VenueLocalRepository
-import com.example.venueexplorer.data.model.Category
 import com.example.venueexplorer.data.model.VenueRequest
-import com.example.venueexplorer.data.model.VenueResponse
 import com.example.venueexplorer.presentation.state.EditScreenUIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -191,8 +189,7 @@ class EditScreenViewModel(
                 }
 
                 // API modeli oluştur
-                val venueResponse = VenueRequest(
-                    id = state.venueId ?: "",
+                val venueRequest = VenueRequest(
                     title = state.title.trim(),
                     description = state.description.trim(),
                     rating = state.rating,
@@ -202,10 +199,10 @@ class EditScreenViewModel(
 
                 if (state.isEditMode && state.venueId != null) {
                     // UPDATE
-                    venueLocalRepository.updateVenues(state.venueId, venueResponse)
+                    venueLocalRepository.updateVenues(state.venueId, venueRequest)
                 } else {
                     // INSERT
-                    venueLocalRepository.addVenue(venueResponse)
+                    venueLocalRepository.addVenue(venueRequest)
                 }
 
                 _uiState.update {

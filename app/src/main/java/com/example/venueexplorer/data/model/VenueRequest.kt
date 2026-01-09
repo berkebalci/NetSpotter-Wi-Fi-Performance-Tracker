@@ -3,9 +3,7 @@ package com.example.venueexplorer.data.model
 import com.google.gson.annotations.SerializedName
 
 data class VenueRequest (
-    @SerializedName("_id")
-    val id: String,
-
+    
     @SerializedName("title")
     val title: String,
 
