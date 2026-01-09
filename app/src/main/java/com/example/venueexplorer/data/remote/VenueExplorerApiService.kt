@@ -1,7 +1,8 @@
 package com.example.venueexplorer.data.remote
 
 import com.example.venueexplorer.data.model.Category
-import com.example.venueexplorer.data.model.Venue
+import com.example.venueexplorer.data.model.VenueRequest
+import com.example.venueexplorer.data.model.VenueResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -13,23 +14,23 @@ import retrofit2.http.Query
 
 interface VenueExplorerApiService {
 
-    // DÜZELTME: Artık VenueEntity yerine API modeli olan Venue dönüyor
+    // DÜZELTME: Artık VenueEntity yerine API modeli olan VenueResponse dönüyor
     @GET("api/venues")
-    suspend fun getAllVenues(): List<Venue>
+    suspend fun getAllVenues(): List<VenueResponse>
 
     @GET("api/venues/{id}")
-    suspend fun getVenueById(@Path("id") id: String): Venue
+    suspend fun getVenueById(@Path("id") id: String): VenueResponse
 
     @GET("api/venues/search")
-    suspend fun searchVenues(@Query("q") query: String): List<Venue>
+    suspend fun searchVenues(@Query("q") query: String): List<VenueResponse>
     //response olmayinca kendisi direkt 200 oldugu zaman sadece gonderiyor, olmadigi zaman da http error'u firlatiyor.
 
     // Ekleme yaparken de API modeli yolluyoruz
     @POST("api/venues")
-    suspend fun addVenue(@Body venue: Venue): Response<Venue>
+    suspend fun addVenue(@Body venueRequest: VenueRequest): Response<VenueResponse>
 
     @PUT("api/venues/{id}")
-    suspend fun updateVenue(@Path("id") id: String, @Body venue: Venue): Response<Venue>
+    suspend fun updateVenue(@Path("id") id: String, @Body venueRequest: VenueRequest): Response<VenueResponse>
 
     @DELETE("api/venues/{id}")
     suspend fun deleteVenue(@Path("id") id: String): Response<Unit>

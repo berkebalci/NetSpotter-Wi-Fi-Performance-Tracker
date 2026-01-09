@@ -12,7 +12,8 @@ class CategoryLocalRepository(
     private val TAG = "TAGCategoryRepo"
     suspend fun getAllCategories(): List<CategoryEntity>{
         try {
-            val categories = api.getCategories()
+            val categories = api.getCategories() //List seklinde Category objeleri donuyor.
+
             val entities = categories.map { it.toEntity() }
             deleteAll()
             categoryDao.insertAll(entities)

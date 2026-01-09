@@ -4,7 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.venueexplorer.data.local.CategoryLocalRepository
 import com.example.venueexplorer.data.local.VenueLocalRepository
 import com.example.venueexplorer.data.model.Category
-import com.example.venueexplorer.data.model.Venue
+import com.example.venueexplorer.data.model.VenueRequest
+import com.example.venueexplorer.data.model.VenueResponse
 import com.example.venueexplorer.presentation.state.EditScreenUIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +23,7 @@ class EditScreenViewModel(
 
     init {
         loadCategories()
-
+        //loadVenueForEditing()
     }
 
     // ═══════════════════════════════════════════════════════
@@ -71,8 +72,8 @@ class EditScreenViewModel(
             _uiState.update { it.copy(isLoading = true, isEditMode = true, venueId = venueId) }
 
             try {
-                val allVenues = venueLocalRepository.getVenues()
-                val venue = allVenues.find { it.id == venueId }
+
+                val venue = venueLocalRepository.getVenueById(venueId)
 
                 if (venue != null) {
                     _uiState.update {
@@ -190,25 +191,21 @@ class EditScreenViewModel(
                 }
 
                 // API modeli oluştur
-                val venue = Venue(
+                val venueResponse = VenueRequest(
                     id = state.venueId ?: "",
                     title = state.title.trim(),
                     description = state.description.trim(),
                     rating = state.rating,
-                    category = Category(
-                        id = selectedCategory.id,
-                        name = selectedCategory.name,
-                        color = selectedCategory.color,
-                        iconName = selectedCategory.iconName
+                    categoryId = selectedCategory.id
                     )
-                )
+
 
                 if (state.isEditMode && state.venueId != null) {
                     // UPDATE
-                    venueLocalRepository.updateVenues(state.venueId, venue)
+                    venueLocalRepository.updateVenues(state.venueId, venueResponse)
                 } else {
                     // INSERT
-                    venueLocalRepository.addVenue(venue)
+                    venueLocalRepository.addVenue(venueResponse)
                 }
 
                 _uiState.update {

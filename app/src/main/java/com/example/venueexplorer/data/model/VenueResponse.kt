@@ -3,7 +3,7 @@ package com.example.venueexplorer.data.model
 import com.google.gson.annotations.SerializedName
 
 // API'den gelen ham veri yapısı
-data class Venue(
+data class VenueResponse(
     @SerializedName("_id")
     val id: String,
 
@@ -19,6 +19,9 @@ data class Venue(
     // İŞTE FARK BURADA:
     // API, kategoriyi bir obje olarak yollar.
     // Entity (Veritabanı) ise bunu parçalanmış stringler olarak tutar.
+
     @SerializedName("categoryId")
-    val category: Category? // Bazen null gelebilir, o yüzden ? koyduk
+    val category: Category? = null // Bazen null gelebilir, o yüzden ? koyduk
+
+
 )

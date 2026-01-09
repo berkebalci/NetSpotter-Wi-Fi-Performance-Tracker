@@ -1,8 +1,9 @@
 package com.example.venueexplorer.data.local
 
 import android.util.Log
+import com.example.venueexplorer.data.model.VenueRequest
 // Model sınıfını import etmelisin (Dosya yolu farklı olabilir)
-import com.example.venueexplorer.data.model.Venue
+import com.example.venueexplorer.data.model.VenueResponse
 import com.example.venueexplorer.data.remote.VenueExplorerApiService
 
 class VenueLocalRepository(
@@ -14,10 +15,10 @@ class VenueLocalRepository(
 
     suspend fun getVenues(): List<VenueEntity> {
         try {
-            val remoteVenues = api.getAllVenues() // List<Venue> döner
-            if (remoteVenues.isNotEmpty()) {
-                // Venue -> VenueEntity dönüşümü
-                val entities = remoteVenues.map { it.toEntity() }
+            val remoteVenueResponses = api.getAllVenues() // List<VenueResponse> döner
+            if (remoteVenueResponses.isNotEmpty()) {
+                // VenueResponse -> VenueEntity dönüşümü
+                val entities = remoteVenueResponses.map { it.toEntity() }
 
                 venueDao.deleteAllVenues()
                 venueDao.insertAll(entities)
@@ -40,9 +41,11 @@ class VenueLocalRepository(
 
     }
 
-    suspend fun addVenue(venue: Venue) {
+    suspend fun addVenue(venueRequest: VenueRequest) {
         try {
-            val responsee = api.addVenue(venue)
+            //TODO: Problem su response'dan null geliyo
+            val responsee = api.addVenue(venueRequest)
+            Log.e(TAG, "Ekleme Başarılı: ${responsee.body()}")
             if(responsee.isSuccessful){
                 val addedVenue = responsee.body()
                 venueDao.insertAll(listOf(addedVenue!!.toEntity()))
@@ -71,9 +74,9 @@ class VenueLocalRepository(
             throw e
         }
     }
-    suspend fun updateVenues(id: String,venue: Venue) {
+    suspend fun updateVenues(id: String, venueRequest: VenueRequest) {
         try {
-            val response = api.updateVenue(id, venue)
+            val response = api.updateVenue(id, venueRequest)
             if (response.isSuccessful) {
                 val updatedVenue = response.body()!!
                 venueDao.updateVenue(updatedVenue.toEntity())
@@ -96,17 +99,18 @@ class VenueLocalRepository(
     }
 
     // --- MAPPER DÜZELTİLDİ ---
-    // Bu fonksiyon VenueEntity üzerinde değil, API'den gelen 'Venue' sınıfı üzerinde olmalı.
-    private fun Venue.toEntity(): VenueEntity {
+    // Bu fonksiyon VenueEntity üzerinde değil, API'den gelen 'VenueResponse' sınıfı üzerinde olmalı.
+    private fun VenueResponse.toEntity(): VenueEntity {
         return VenueEntity(
             id = id,
             title = title,
             description = description,
             rating = rating,
-            // Venue modelinde 'category' objesi nullable olabilir (?.)
+            // VenueResponse modelinde 'category' objesi nullable olabilir (?.)
             categoryId = category?.id ?: "",
             latitude = null,
             longitude = null
         )
     }
+
 }
