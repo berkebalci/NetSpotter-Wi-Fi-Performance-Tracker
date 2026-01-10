@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.Museum
 import androidx.compose.material.icons.outlined.Park
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.example.venueexplorer.data.local.CategoryEntity
 import com.example.venueexplorer.data.local.VenueEntity
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeScreenViewModel,
@@ -63,55 +65,63 @@ fun HomeScreen(
             }
 
             // Venue List
-            Box(modifier = Modifier.weight(1f)) {
-                when {
-                    uiState.isLoading -> {
-                        LoadingState()
-                    }
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = {
+                    viewModel.refreshData()
+                },
+                )
+            {
+                Box {
+                    when {
+                        uiState.isLoading -> {
+                            LoadingState()
+                        }
 
-                    uiState.isError -> {
-                        ErrorState(
-                            errorMessage = uiState.errorMessage,
-                            onRetry = {
-                                viewModel.clearError()
-                                viewModel.refreshData()
-                            }
-                        )
-                    }
-
-                    uiState.venues.isEmpty() -> {
-                        EmptyState(
-                            searchQuery = uiState.searchQuery,
-                            onAddClick = { onNavigateToEditScreen(null) }
-                        )
-                    }
-
-                    else -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(
-                                items = uiState.venues,
-                                key = { it.id }
-                            ) { venue ->
-                                val category = uiState.categories.find {
-                                    it.id == venue.categoryId
+                        uiState.isError -> {
+                            ErrorState(
+                                errorMessage = uiState.errorMessage,
+                                onRetry = {
+                                    viewModel.clearError()
+                                    viewModel.refreshData()
                                 }
-                                Log.e("HomeScreen", "VenueId ${venue.id}")
+                            )
+                        }
 
-                                ModernVenueCard(
-                                    venue = venue,
-                                    category = category,
-                                    onClick = { onNavigateToDetailsScreen(venue.id) },
-                                    onDelete = { viewModel.deleteVenue(venue.id) }
-                                )
-                            }
+                        uiState.venues.isEmpty() -> {
+                            EmptyState(
+                                searchQuery = uiState.searchQuery,
+                                onAddClick = { onNavigateToEditScreen(null) }
+                            )
+                        }
 
-                            // Bottom padding for FAB
-                            item {
-                                Spacer(modifier = Modifier.height(80.dp))
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                items(
+                                    items = uiState.venues,
+                                    key = { it.id }
+                                ) { venue ->
+                                    val category = uiState.categories.find {
+                                        it.id == venue.categoryId
+                                    }
+                                    Log.e("HomeScreen", "VenueId ${venue.id}")
+
+                                    ModernVenueCard(
+                                        venue = venue,
+                                        category = category,
+                                        onClick = { onNavigateToDetailsScreen(venue.id) },
+                                        onDelete = { viewModel.deleteVenue(venue.id) }
+                                    )
+                                }
+
+                                // Bottom padding for FAB
+                                item {
+                                    Spacer(modifier = Modifier.height(80.dp))
+                                }
                             }
                         }
                     }
@@ -168,7 +178,7 @@ fun ModernHeader() {
             )
 
             // Profile Icon
-            Box(
+            /*Box(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
@@ -181,7 +191,7 @@ fun ModernHeader() {
                     tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
-            }
+            }*/
         }
     }
 }

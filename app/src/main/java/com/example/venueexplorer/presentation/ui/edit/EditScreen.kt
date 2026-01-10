@@ -39,12 +39,13 @@ fun EditScreen(
             viewModel.loadVenueForEditing(id)
         }
     }
-
+    //isEditMode
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
             onSaveButtonClicked()
         }
     }
+
 
     Box(
         modifier = modifier
@@ -133,7 +134,10 @@ fun EditScreen(
                         isEditMode = uiState.isEditMode,
                         isSaving = uiState.isSaving,
                         isEnabled = !uiState.isSaving && uiState.categories.isNotEmpty(),
-                        onClick = { viewModel.saveVenue() }
+                        onClick = {
+                            viewModel.saveVenue()
+                            if(uiState.isEditMode) onSaveButtonClicked()
+                    }
                     )
                 }
             }
@@ -229,7 +233,7 @@ fun ModernPhotoPlaceholder() {
                 modifier = Modifier.size(48.dp)
             )
             Text(
-                text = "Add Venue Photo",
+                text = "This Section is not ready yet",
                 color = Color(0xFF8B95A5),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
@@ -579,13 +583,13 @@ fun ModernLocationCard() {
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "Current Location",
+                    text = "This Section is not available yet",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF212121)
                 )
                 Text(
-                    text = "Fetching coordinates...",
+                    text = "It will be ready :)",
                     fontSize = 12.sp,
                     color = Color(0xFF757575)
                 )

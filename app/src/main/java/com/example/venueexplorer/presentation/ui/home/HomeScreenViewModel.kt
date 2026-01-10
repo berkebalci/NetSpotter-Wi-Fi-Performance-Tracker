@@ -25,24 +25,22 @@ class HomeScreenViewModel(
         loadData()
     }
 
-    // ═══════════════════════════════════════════════════════
-    // API TEST 1: GET ALL VENUES & CATEGORIES
-    // ═══════════════════════════════════════════════════════
     fun loadData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, isError = false) }
 
             try {
-                // ✅ 1. ÖNCE kategorileri yükle
+
                 val categories = categoryRepository.getAllCategories()
                 _uiState.update { it.copy(categories = categories) }
 
-                // ✅ 2. SONRA venue'ları yükle (artık foreign key'ler mevcut)
+
                 val venues = venueLocalRepository.getVenues()
                 _uiState.update {
                     it.copy(
                         venues = venues,
-                        isLoading = false
+                        isLoading = false,
+                        isRefreshing = false
                     )
                 }
 
@@ -152,6 +150,7 @@ class HomeScreenViewModel(
     }
 
     fun refreshData() {
+        _uiState.update { it.copy(isRefreshing = true) }
         loadData()
     }
 }

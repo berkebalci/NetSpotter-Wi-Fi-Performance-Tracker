@@ -9,5 +9,6 @@ data class HomeScreenUIState(
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val errorMessage: String? = null,
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val isRefreshing : Boolean = false
 )

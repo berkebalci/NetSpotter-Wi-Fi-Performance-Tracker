@@ -85,7 +85,9 @@ fun VenueExplorerNavHost(
             EditScreen(
                 venueId = venueId
                 ,viewModel = viewModel(factory = viewModelFactory),
-                onSaveButtonClicked ={} ,
+                onSaveButtonClicked ={
+                    navController.popBackStack()
+                } ,
             onCancelButtonClicked = {
                 navController.popBackStack()
             },
