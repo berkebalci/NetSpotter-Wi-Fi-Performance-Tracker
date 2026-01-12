@@ -21,7 +21,11 @@ data class VenueResponse(
     // Entity (Veritabanı) ise bunu parçalanmış stringler olarak tutar.
 
     @SerializedName("categoryId")
-    val category: Category? = null // Bazen null gelebilir, o yüzden ? koyduk
+    val category: Category? = null,// Bazen null gelebilir, o yüzden ? koyduk
 
+    @SerializedName("latitude")
+    val latitude: Double?,
 
+    @SerializedName("longitude")
+    val longitude: Double?
 )

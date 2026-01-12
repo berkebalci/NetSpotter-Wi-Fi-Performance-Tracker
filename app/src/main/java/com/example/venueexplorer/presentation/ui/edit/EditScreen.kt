@@ -1,5 +1,8 @@
 package com.example.venueexplorer.presentation.ui.edit
 
+import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -32,6 +35,7 @@ fun EditScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
 
     // Kayıt başarılı olduğunda callback çağır
     LaunchedEffect(venueId) {
@@ -717,6 +721,7 @@ fun ModernLoadingState() {
         }
     }
 }
+
 
 // ═══════════════════════════════════════════════════════
 // HELPER FUNCTIONS

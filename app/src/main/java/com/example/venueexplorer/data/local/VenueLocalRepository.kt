@@ -19,7 +19,7 @@ class VenueLocalRepository(
             if (remoteVenueResponses.isNotEmpty()) {
                 // VenueResponse -> VenueEntity dönüşümü
                 val entities = remoteVenueResponses.map { it.toEntity() }
-
+                Log.e("Deneme",entities[0].latitude.toString())
                 venueDao.deleteAllVenues()
                 venueDao.insertAll(entities)
             }
@@ -109,8 +109,8 @@ class VenueLocalRepository(
             rating = rating,
             // VenueResponse modelinde 'category' objesi nullable olabilir (?.)
             categoryId = category?.id ?: "",
-            latitude = null,
-            longitude = null
+            latitude = latitude,
+            longitude = longitude
         )
     }
 

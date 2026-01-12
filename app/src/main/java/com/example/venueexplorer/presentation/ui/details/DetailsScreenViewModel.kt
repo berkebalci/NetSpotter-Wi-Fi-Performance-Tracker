@@ -25,6 +25,10 @@ class DetailsScreenViewModel(
     // ═══════════════════════════════════════════════════════
     // LOAD VENUE DETAILS
     // ═══════════════════════════════════════════════════════
+    fun googleMaps(){
+
+    }
+
     fun loadVenueDetails(venueId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, isError = false) }

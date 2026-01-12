@@ -46,7 +46,8 @@ android {
 
 dependencies {
     val room_version = "2.8.4"
-
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.maps.android:maps-compose:4.3.0")
     implementation("androidx.compose.material:material-icons-extended:1.7.6")
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")

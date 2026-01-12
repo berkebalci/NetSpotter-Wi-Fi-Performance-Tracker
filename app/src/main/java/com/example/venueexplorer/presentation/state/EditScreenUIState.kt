@@ -15,5 +15,7 @@ data class EditScreenUIState(
     val errorMessage: String? = null,
     val isSaved: Boolean = false,
     val isEditMode: Boolean = false, // Yeni alan: Edit mi yoksa Add mi?
-    val venueId: String? = null // Edit modunda venue ID'si
+    val venueId: String? = null, // Edit modunda venue ID'si,
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )

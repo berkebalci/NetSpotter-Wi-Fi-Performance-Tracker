@@ -1,5 +1,6 @@
 package com.example.venueexplorer.presentation.ui.edit
 import android.content.ContentValues.TAG
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.venueexplorer.data.local.CategoryLocalRepository
@@ -12,6 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 
 class EditScreenViewModel(
     private val venueLocalRepository: VenueLocalRepository,
@@ -20,6 +24,8 @@ class EditScreenViewModel(
 
     private val _uiState = MutableStateFlow(EditScreenUIState())
     val uiState: StateFlow<EditScreenUIState> = _uiState.asStateFlow()
+    val hasLocationPermissionGranted by mutableStateOf(false)
+    val hasLocationPermissionDenied by mutableStateOf(false)
 
     init {
         loadCategories()
@@ -196,7 +202,9 @@ class EditScreenViewModel(
                     title = state.title.trim(),
                     description = state.description.trim(),
                     rating = state.rating,
-                    categoryId = selectedCategory.id
+                    categoryId = selectedCategory.id,
+                    latitude = state.latitude,
+                    longitude = state.longitude
                     )
 
 
@@ -230,6 +238,7 @@ class EditScreenViewModel(
             }
         }
     }
+
 
     fun clearError() {
         _uiState.update { it.copy(isError = false, errorMessage = null) }

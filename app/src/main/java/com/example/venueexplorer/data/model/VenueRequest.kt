@@ -17,5 +17,12 @@ data class VenueRequest (
     // API, kategoriyi bir obje olarak yollar.
     // Entity (Veritabanı) ise bunu parçalanmış stringler olarak tutar.
     @SerializedName("categoryId")
-    val categoryId: String?
+    val categoryId: String?,
+
+    @SerializedName("latitude")
+    val latitude: Double? ,
+
+    @SerializedName("longitude")
+    val longitude: Double?
+
 )
