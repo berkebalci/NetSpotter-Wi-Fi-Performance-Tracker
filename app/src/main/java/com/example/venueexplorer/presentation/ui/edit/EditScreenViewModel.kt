@@ -16,6 +16,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 class EditScreenViewModel(
     private val venueLocalRepository: VenueLocalRepository,
@@ -24,12 +25,14 @@ class EditScreenViewModel(
 
     private val _uiState = MutableStateFlow(EditScreenUIState())
     val uiState: StateFlow<EditScreenUIState> = _uiState.asStateFlow()
-    val hasLocationPermissionGranted by mutableStateOf(false)
-    val hasLocationPermissionDenied by mutableStateOf(false)
+    var hasLocationPermissionGranted by mutableStateOf(false)
 
     init {
         loadCategories()
 
+    }
+    fun updateLocationPermssion(isGranted: Boolean){
+        hasLocationPermissionGranted = isGranted
     }
 
     // ═══════════════════════════════════════════════════════

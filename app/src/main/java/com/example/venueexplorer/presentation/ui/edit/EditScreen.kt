@@ -2,6 +2,8 @@ package com.example.venueexplorer.presentation.ui.edit
 
 import android.annotation.SuppressLint
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.jar.Manifest
 
 @Composable
 fun EditScreen(
@@ -35,7 +38,21 @@ fun EditScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
+    val locationPermissionRequest = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+        ) { permissions ->
+        when {
+            permissions.getOrDefault(android.Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
+                viewModel.updateLocationPermssion(true)
+            }
+            permissions.getOrDefault(android.Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
+                viewModel.updateLocationPermssion(true)
+            }
+            else -> {
+                viewModel.updateLocationPermssion(false)
+            }
+        }
+    }
 
     // Kayıt başarılı olduğunda callback çağır
     LaunchedEffect(venueId) {
@@ -130,7 +147,16 @@ fun EditScreen(
                         )
 
                         // Location Info (Placeholder)
-                        ModernLocationCard()
+                        ModernLocationCard(
+                            onClick = {
+                                locationPermissionRequest.launch(
+                                    arrayOf(
+                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
+                                )
+                            }
+                        )
                     }
 
                     // Fixed Save Button
@@ -554,9 +580,12 @@ fun ModernDescriptionInput(
 }
 
 @Composable
-fun ModernLocationCard() {
+fun ModernLocationCard(
+    onClick: () -> Unit
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         color = Color.White,
         shadowElevation = 1.dp
@@ -573,7 +602,8 @@ fun ModernLocationCard() {
                     .size(40.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color(0xFFF5F5F5)),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
+
             ) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
@@ -721,7 +751,6 @@ fun ModernLoadingState() {
         }
     }
 }
-
 
 // ═══════════════════════════════════════════════════════
 // HELPER FUNCTIONS
