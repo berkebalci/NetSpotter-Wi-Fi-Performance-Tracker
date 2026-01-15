@@ -34,6 +34,9 @@ class EditScreenViewModel(
     fun updateLocationPermssion(isGranted: Boolean){
         hasLocationPermissionGranted = isGranted
     }
+    fun updateLocation(latitude: Double?,longitude: Double?){
+        _uiState.update { it.copy(latitude = latitude, longitude = longitude) }
+    }
 
     // ═══════════════════════════════════════════════════════
     // LOAD CATEGORIES
