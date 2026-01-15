@@ -53,7 +53,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
     implementation ("androidx.navigation:navigation-compose:2.9.6")
     ksp("androidx.room:room-compiler:$room_version")
-
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     // If this project only uses Java source, use the Java annotationProcessor
     // No additional plugins are necessary
     annotationProcessor("androidx.room:room-compiler:$room_version")
