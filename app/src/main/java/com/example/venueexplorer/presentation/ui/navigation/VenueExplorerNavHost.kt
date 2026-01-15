@@ -1,5 +1,6 @@
 package com.example.venueexplorer.presentation.ui.navigation
 
+import MapScreen
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,6 +47,23 @@ fun VenueExplorerNavHost(
             )
 
         }
+        composable(
+            route = VenueExplorerNavDestination.Map.route,
+            arguments = listOf(
+                navArgument("latitude") { type = NavType.FloatType },
+                navArgument("longitude") { type = NavType.FloatType }
+            )
+        ) { backStackEntry ->
+            val latitude = backStackEntry.arguments?.getFloat("latitude")?.toDouble()
+            val longitude = backStackEntry.arguments?.getFloat("longitude")?.toDouble()
+
+            MapScreen(
+                venueLatitude = latitude,
+                venueLongitude = longitude,
+                onBackClicked = { navController.popBackStack() },
+                locationService = appContainer.locationService
+            )
+        }
         composable(route = VenueExplorerNavDestination.Details.route,
             arguments = listOf(
                 navArgument("venueId") {
@@ -62,9 +80,9 @@ fun VenueExplorerNavHost(
             onEditButtonClicked =  { venueId->
                 navController.navigate(VenueExplorerNavDestination.Edit.createRoute(venueId))
             },
-            onMapContainerClicked = {
-
-            },
+                onMapContainerClicked = { latitude, longitude ->
+                    navController.navigate(VenueExplorerNavDestination.Map.createRoute(latitude,longitude))
+                },
             )
         }
         composable(route = VenueExplorerNavDestination.Add.route) {

@@ -68,6 +68,14 @@ fun EditScreen(
     }
 
 
+
+
+    // İzin durumunu kontrol et
+
+
+    // Otomatik izin kontrolü (MapScreen'deki gibi)
+
+
     Box(
         modifier = modifier
             .fillMaxSize()

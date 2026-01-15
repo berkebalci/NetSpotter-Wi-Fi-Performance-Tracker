@@ -28,7 +28,7 @@ fun DetailsScreen(
     viewModel: DetailsScreenViewModel,
     onBackClicked: () -> Unit,
     onEditButtonClicked: (venueId: String) -> Unit,
-    onMapContainerClicked: () -> Unit,
+    onMapContainerClicked: (latitude: Double, longitude: Double) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -134,7 +134,14 @@ fun DetailsScreen(
                             ModernLocationSection(
                                 latitude = uiState.venue!!.latitude,
                                 longitude = uiState.venue!!.longitude,
-                                onMapClick = onMapContainerClicked
+                                onMapClick = {
+                                    // Venue bilgilerini callback'e geçir
+                                    uiState.venue?.let { venue ->
+                                        if (venue.latitude != null && venue.longitude != null) {
+                                            onMapContainerClicked(venue.latitude, venue.longitude)
+                                        }
+                                    }
+                                }
                             )
 
                             // Bottom padding for fixed buttons

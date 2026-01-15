@@ -9,6 +9,9 @@ sealed class VenueExplorerNavDestination(val route: String) {
     data object Details: VenueExplorerNavDestination("DetailsScreen/{venueId}"){
         fun createRoute(venueId: String) = "DetailsScreen/$venueId"
     }
+    data object Map: VenueExplorerNavDestination("MapScreen/{latitude}/{longitude}") {
+        fun createRoute(latitude: Double, longitude: Double) = "MapScreen/$latitude/$longitude"
+    }
 
 
 }

@@ -1,6 +1,7 @@
 package com.example.venueexplorer.data.local
 
 import android.content.Context
+import com.example.venueexplorer.data.remote.LocationService
 import com.example.venueexplorer.data.remote.VenueExplorerApiService
 import com.example.venueexplorer.data.remote.VenueExplorerClient
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -13,6 +14,9 @@ class AppContainer(private val context: Context) {
 
     private val apiService : VenueExplorerApiService by lazy {
         VenueExplorerClient.apiService
+    }
+   val locationService: LocationService by lazy {
+        LocationService(fusedLocationProviderClient, context)
     }
     val fusedLocationProviderClient: FusedLocationProviderClient by lazy {
         LocationServices.getFusedLocationProviderClient(context)
