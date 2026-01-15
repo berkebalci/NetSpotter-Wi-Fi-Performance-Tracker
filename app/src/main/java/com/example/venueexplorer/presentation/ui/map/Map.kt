@@ -10,7 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.venueexplorer.data.remote.LocationService
+import com.example.venueexplorer.data.location.LocationService
 import com.google.android.gms.maps.CameraUpdateFactory // 1. EKLENDİ
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng

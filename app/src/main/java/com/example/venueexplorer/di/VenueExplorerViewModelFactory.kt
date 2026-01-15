@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.venueexplorer.data.local.CategoryLocalRepository
 import com.example.venueexplorer.data.local.VenueLocalRepository
+import com.example.venueexplorer.data.location.LocationService
 import com.example.venueexplorer.presentation.ui.details.DetailsScreenViewModel
 import com.example.venueexplorer.presentation.ui.edit.EditScreenViewModel
 import com.example.venueexplorer.presentation.home.HomeScreenViewModel
@@ -11,7 +12,8 @@ import com.example.venueexplorer.presentation.home.HomeScreenViewModel
 
 class VenueExplorerViewModelFactory(
     private val venueRepository: VenueLocalRepository,
-    private val categoryRepository: CategoryLocalRepository
+    private val categoryRepository: CategoryLocalRepository,
+    private val locationService: LocationService
 ): ViewModelProvider.Factory {
 
 
@@ -21,7 +23,7 @@ class VenueExplorerViewModelFactory(
         }
 
         if(modelClass.isAssignableFrom(EditScreenViewModel:: class.java)){
-            return EditScreenViewModel(venueRepository, categoryRepository) as T
+            return EditScreenViewModel(venueRepository, categoryRepository,locationService) as T
 
         }
         if(modelClass.isAssignableFrom(DetailsScreenViewModel:: class.java)){

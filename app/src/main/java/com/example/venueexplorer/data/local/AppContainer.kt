@@ -1,7 +1,7 @@
 package com.example.venueexplorer.data.local
 
 import android.content.Context
-import com.example.venueexplorer.data.remote.LocationService
+import com.example.venueexplorer.data.location.LocationService
 import com.example.venueexplorer.data.remote.VenueExplorerApiService
 import com.example.venueexplorer.data.remote.VenueExplorerClient
 import com.google.android.gms.location.FusedLocationProviderClient

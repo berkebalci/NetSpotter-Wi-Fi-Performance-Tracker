@@ -24,7 +24,8 @@ fun VenueExplorerNavHost(
 ) {
     val viewModelFactory = VenueExplorerViewModelFactory(
         venueRepository = appContainer.venueLocalRepository,
-        categoryRepository = appContainer.categoryRepository
+        categoryRepository = appContainer.categoryRepository,
+        locationService = appContainer.locationService
     )
     NavHost(
         navController = navController,
@@ -89,6 +90,7 @@ fun VenueExplorerNavHost(
             EditScreen(
                 venueId = null, // ID göndermiyoruz!
                 viewModel = viewModel(factory = viewModelFactory),
+                locationService = appContainer.locationService,
                 onSaveButtonClicked = { navController.popBackStack() },
                 onCancelButtonClicked = { navController.popBackStack() }
             )
@@ -109,6 +111,7 @@ fun VenueExplorerNavHost(
             onCancelButtonClicked = {
                 navController.popBackStack()
             },
+                locationService = appContainer.locationService
 
             )
         }

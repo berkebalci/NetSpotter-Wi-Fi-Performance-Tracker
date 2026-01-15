@@ -1,10 +1,9 @@
 package com.example.venueexplorer.presentation.ui.edit
 
 import android.annotation.SuppressLint
-import android.os.Build
+import android.location.Location
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,29 +26,34 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.util.jar.Manifest
+import com.example.venueexplorer.data.location.LocationService
 
 @Composable
 fun EditScreen(
     venueId: String?,
     viewModel: EditScreenViewModel,
+    locationService: LocationService,  // ← LocationService eklendi
     onSaveButtonClicked: () -> Unit,
     onCancelButtonClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Location permission launcher
     val locationPermissionRequest = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-        ) { permissions ->
-        when {
-            permissions.getOrDefault(android.Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
-                viewModel.updateLocationPermssion(true)
-            }
-            permissions.getOrDefault(android.Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                viewModel.updateLocationPermssion(true)
-            }
-            else -> {
-                viewModel.updateLocationPermssion(false)
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        viewModel.updateLocationPermssion(granted)
+
+        if (granted) {
+            // İzin verildi, konumu al
+            viewModel.getCurrentLocation() { location ->
+                location?.let {
+                    viewModel.updateLocation(it.latitude, it.longitude)
+                }
             }
         }
     }
@@ -60,21 +64,12 @@ fun EditScreen(
             viewModel.loadVenueForEditing(id)
         }
     }
-    //isEditMode
+
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
             onSaveButtonClicked()
         }
     }
-
-
-
-
-    // İzin durumunu kontrol et
-
-
-    // Otomatik izin kontrolü (MapScreen'deki gibi)
-
 
     Box(
         modifier = modifier
@@ -82,16 +77,12 @@ fun EditScreen(
             .background(Color(0xFFF6F7F8))
     ) {
         when {
-            // ═══════════════════════════════════════════════════════
             // LOADING STATE
-            // ═══════════════════════════════════════════════════════
             uiState.isLoading -> {
                 ModernLoadingState()
             }
 
-            // ═══════════════════════════════════════════════════════
             // FORM
-            // ═══════════════════════════════════════════════════════
             else -> {
                 Column(
                     modifier = Modifier.fillMaxSize()
@@ -154,15 +145,26 @@ fun EditScreen(
                             enabled = !uiState.isSaving
                         )
 
-                        // Location Info (Placeholder)
+                        // Location Card - Güncellenmiş
                         ModernLocationCard(
+                            latitude = uiState.latitude,
+                            longitude = uiState.longitude,
                             onClick = {
-                                locationPermissionRequest.launch(
-                                    arrayOf(
-                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                // İzin kontrolü ve konum alma
+                                if (locationService.hasLocationPermission()) {
+                                    viewModel.getCurrentLocation() { location ->
+                                        location?.let {
+                                            viewModel.updateLocation(it.latitude, it.longitude)
+                                        }
+                                    }
+                                } else {
+                                    locationPermissionRequest.launch(
+                                        arrayOf(
+                                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                            android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
                                     )
-                                )
+                                }
                             }
                         )
                     }
@@ -175,13 +177,19 @@ fun EditScreen(
                         onClick = {
                             viewModel.saveVenue()
                             if(uiState.isEditMode) onSaveButtonClicked()
-                    }
+                        }
                     )
                 }
             }
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════
+// HELPER FUNCTION - Get Current Location
+// ═══════════════════════════════════════════════════════
+
+
 
 // ═══════════════════════════════════════════════════════
 // COMPOSABLE COMPONENTS
@@ -207,7 +215,6 @@ fun ModernEditTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Cancel Button
             TextButton(
                 onClick = onCancelClick,
                 enabled = !isSaving
@@ -220,7 +227,6 @@ fun ModernEditTopBar(
                 )
             }
 
-            // Title
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
@@ -229,7 +235,6 @@ fun ModernEditTopBar(
                 color = Color(0xFF212121)
             )
 
-            // Empty spacer for centering
             Spacer(modifier = Modifier.width(60.dp))
         }
     }
@@ -246,7 +251,6 @@ fun ModernPhotoPlaceholder() {
             .clickable { /* Photo picker action */ },
         contentAlignment = Alignment.Center
     ) {
-        // Gradient overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -453,7 +457,6 @@ fun ModernRatingCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -480,7 +483,6 @@ fun ModernRatingCard(
                 }
             }
 
-            // Star Display
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -506,7 +508,6 @@ fun ModernRatingCard(
                 }
             }
 
-            // Progress Bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -523,7 +524,6 @@ fun ModernRatingCard(
                 )
             }
 
-            // Hint Text
             Text(
                 text = "Tap stars to rate",
                 fontSize = 12.sp,
@@ -589,6 +589,8 @@ fun ModernDescriptionInput(
 
 @Composable
 fun ModernLocationCard(
+    latitude: Double?,
+    longitude: Double?,
     onClick: () -> Unit
 ) {
     Surface(
@@ -609,14 +611,21 @@ fun ModernLocationCard(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFFF5F5F5)),
-                contentAlignment = Alignment.Center,
-
+                    .background(
+                        if (latitude != null && longitude != null)
+                            Color(0xFF2196F3).copy(alpha = 0.2f)
+                        else
+                            Color(0xFFF5F5F5)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = null,
-                    tint = Color(0xFF757575),
+                    tint = if (latitude != null && longitude != null)
+                        Color(0xFF2196F3)
+                    else
+                        Color(0xFF757575),
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -625,15 +634,32 @@ fun ModernLocationCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "This Section is not available yet",
+                    text = if (latitude != null && longitude != null) {
+                        "Location Set"
+                    } else {
+                        "Add Location"
+                    },
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF212121)
                 )
                 Text(
-                    text = "It will be ready :)",
+                    text = if (latitude != null && longitude != null) {
+                        "Lat: %.4f, Lng: %.4f".format(latitude, longitude)
+                    } else {
+                        "Tap to get current location"
+                    },
                     fontSize = 12.sp,
                     color = Color(0xFF757575)
+                )
+            }
+
+            if (latitude != null && longitude != null) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -759,10 +785,6 @@ fun ModernLoadingState() {
         }
     }
 }
-
-// ═══════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════
 
 fun getCategoryIcon(iconName: String): ImageVector {
     return when (iconName.lowercase()) {
