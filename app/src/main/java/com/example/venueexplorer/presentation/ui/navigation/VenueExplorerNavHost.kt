@@ -16,6 +16,7 @@ import com.example.venueexplorer.di.VenueExplorerViewModelFactory
 import com.example.venueexplorer.presentation.home.HomeScreen
 import com.example.venueexplorer.presentation.ui.details.DetailsScreen
 import com.example.venueexplorer.presentation.ui.edit.EditScreen
+import com.example.venueexplorer.presentation.ui.speedtest.SpeedTestScreen
 
 @Composable
 fun VenueExplorerNavHost(
@@ -25,7 +26,8 @@ fun VenueExplorerNavHost(
     val viewModelFactory = VenueExplorerViewModelFactory(
         venueRepository = appContainer.venueLocalRepository,
         categoryRepository = appContainer.categoryRepository,
-        locationService = appContainer.locationService
+        locationService = appContainer.locationService,
+        speedTestRepository = appContainer.speedTestRepository
     )
     NavHost(
         navController = navController,
@@ -43,6 +45,9 @@ fun VenueExplorerNavHost(
                 onNavigateToAddVenue = {
                     // FAB'a basınca Add rotasına git
                     navController.navigate(VenueExplorerNavDestination.Add.route)
+                },
+                onNavigateToSpeedTest = {
+                    navController.navigate(VenueExplorerNavDestination.SpeedTest.route)
                 }
 
             )
@@ -113,6 +118,12 @@ fun VenueExplorerNavHost(
             },
                 locationService = appContainer.locationService
 
+            )
+        }
+        composable(route = VenueExplorerNavDestination.SpeedTest.route) {
+            SpeedTestScreen(
+                viewModel = viewModel(factory = viewModelFactory),
+                onBackClicked = { navController.popBackStack() }
             )
         }
     }

@@ -4,6 +4,8 @@ import android.content.Context
 import com.example.venueexplorer.data.location.LocationService
 import com.example.venueexplorer.data.remote.VenueExplorerApiService
 import com.example.venueexplorer.data.remote.VenueExplorerClient
+import com.example.venueexplorer.data.repository.SpeedTestRepository
+import com.example.venueexplorer.data.repository.SpeedTestRepositoryImpl
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
@@ -32,5 +34,10 @@ class AppContainer(private val context: Context) {
     // CategoryRepository aynı mantıkla oluşturulur.
     val categoryRepository: CategoryLocalRepository by lazy {
         CategoryLocalRepository(apiService, database.categoryDao())
+    }
+    
+    // SpeedTestRepository for internet speed testing
+    val speedTestRepository: SpeedTestRepository by lazy {
+        SpeedTestRepositoryImpl()
     }
 }

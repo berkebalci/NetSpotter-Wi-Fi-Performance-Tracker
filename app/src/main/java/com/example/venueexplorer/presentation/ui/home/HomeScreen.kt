@@ -35,7 +35,8 @@ fun HomeScreen(
     viewModel: HomeScreenViewModel,
     onNavigateToEditScreen: (String?) -> Unit,
     onNavigateToDetailsScreen: (String) -> Unit,
-    onNavigateToAddVenue: () -> Unit
+    onNavigateToAddVenue: () -> Unit,
+    onNavigateToSpeedTest: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -49,7 +50,7 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             // Header Section
-            ModernHeader()
+            ModernHeader(onNavigateToSpeedTest = onNavigateToSpeedTest)
 
             // Search Bar
             ModernSearchBar(
@@ -150,7 +151,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun ModernHeader() {
+fun ModernHeader(onNavigateToSpeedTest: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -178,6 +179,21 @@ fun ModernHeader() {
                 color = Color(0xFF212121)
             )
 
+            // Speed Test Icon
+            IconButton(
+                onClick = onNavigateToSpeedTest,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF2196F3).copy(alpha = 0.1f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Speed,
+                    contentDescription = "Speed Test",
+                    tint = Color(0xFF2196F3),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             // Profile Icon
             /*Box(
                 modifier = Modifier

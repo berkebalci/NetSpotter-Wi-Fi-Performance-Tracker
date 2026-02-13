@@ -12,6 +12,7 @@ sealed class VenueExplorerNavDestination(val route: String) {
     data object Map: VenueExplorerNavDestination("MapScreen/{latitude}/{longitude}") {
         fun createRoute(latitude: Double, longitude: Double) = "MapScreen/$latitude/$longitude"
     }
+    data object SpeedTest: VenueExplorerNavDestination("SpeedTestScreen")
 
 
 }
