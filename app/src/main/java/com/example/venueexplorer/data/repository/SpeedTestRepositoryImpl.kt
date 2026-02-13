@@ -1,5 +1,6 @@
 package com.example.venueexplorer.data.repository
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -14,10 +15,14 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 /**
- * Implementation of SpeedTestRepository using OkHttp for network operations.
+ * Implementation of SpeedTestRepository using OkHttpfor network operations.
  * Measures internet speed by downloading/uploading test files and calculating transfer rates.
  */
 class SpeedTestRepositoryImpl : SpeedTestRepository {
+    
+    companion object {
+        private const val TAG = "SpeedTestRepo"
+    }
     
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -25,49 +30,56 @@ class SpeedTestRepositoryImpl : SpeedTestRepository {
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
     
-    // Test file URLs - using publicly available files from CDNs
+    // Test file URLs - using HTTP to avoid SSL certificate issues
     private val downloadTestUrls = listOf(
-        "https://speed.hetzner.de/1GB.bin",  // 1GB file
-        "https://speed.hetzner.de/100MB.bin", // 100MB file
-        "https://speed.hetzner.de/10MB.bin"   // 10MB file
+        "https://speed.cloudflare.com/__down?bytes=25000000", // 25 MB (İdeal Başlangıç)
+        "https://speed.cloudflare.com/__down?bytes=50000000", // 50 MB (Yüksek Hızlar İçin)
     )
-    
-    // Upload test endpoint (we'll use a POST request to measure upload speed)
-    private val uploadTestUrl = "https://httpbin.org/post"
-    
-    // Ping test servers
+
+    // UPLOAD: Cloudflare Speedtest Upload Endpoint
+// Bu adres hız testi uploadları için optimize edilmiştir, httpbin gibi banlamaz.
+    private val uploadTestUrl = "https://speed.cloudflare.com/__up"
+
+    // PING: Dünyanın en hızlı DNS sunucusu (Genelde en düşük latency buradadır)
     private val pingTestUrls = listOf(
-        "https://www.google.com",
-        "https://www.cloudflare.com",
-        "https://www.amazon.com"
+        "https://1.1.1.1",
+        "https://www.google.com"
     )
     
     @Volatile
     private var isCancelled = false
     
     override suspend fun measureDownloadSpeed(): Flow<Double> = flow {
-        isCancelled = false
+        Log.d(TAG, "Starting download speed test, isCancelled=$isCancelled")
         
-        // Use the 10MB file for download test to get quick results
-        val testUrl = downloadTestUrls[2]
+        // Use the 10MB file for download test
+        val testUrl = downloadTestUrls[0]
+        Log.d(TAG, "Download test URL: $testUrl")
         
         val request = Request.Builder()
             .url(testUrl)
             .build()
         
-        withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Executing download request...")
             client.newCall(request).execute().use { response ->
+                Log.d(TAG, "Response received - Success: ${response.isSuccessful}, Code: ${response.code}")
+                
                 if (!response.isSuccessful || isCancelled) {
+                    Log.e(TAG, "Download failed or cancelled - Success: ${response.isSuccessful}, Cancelled: $isCancelled")
                     emit(0.0)
-                    return@withContext
+                    return@flow
                 }
                 
                 val body = response.body ?: run {
+                    Log.e(TAG, "Response body is null")
                     emit(0.0)
-                    return@withContext
+                    return@flow
                 }
                 
                 val contentLength = body.contentLength()
+                Log.d(TAG, "Content length: $contentLength bytes")
+                
                 val inputStream = body.byteStream()
                 val buffer = ByteArray(8192)
                 
@@ -87,6 +99,7 @@ class SpeedTestRepositoryImpl : SpeedTestRepository {
                         val elapsedSeconds = (currentTime - startTime) / 1000.0
                         if (elapsedSeconds > 0) {
                             val speedMbps = (totalBytesRead * 8.0) / (elapsedSeconds * 1_000_000)
+                            Log.d(TAG, "Download progress - Bytes: $totalBytesRead, Speed: $speedMbps Mbps")
                             emit(speedMbps)
                             lastEmitTime = currentTime
                         }
@@ -97,18 +110,23 @@ class SpeedTestRepositoryImpl : SpeedTestRepository {
                 val totalElapsedSeconds = (System.currentTimeMillis() - startTime) / 1000.0
                 if (totalElapsedSeconds > 0 && !isCancelled) {
                     val finalSpeedMbps = (totalBytesRead * 8.0) / (totalElapsedSeconds * 1_000_000)
+                    Log.d(TAG, "Download complete - Total bytes: $totalBytesRead, Time: $totalElapsedSeconds s, Final speed: $finalSpeedMbps Mbps")
                     emit(finalSpeedMbps)
                 }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Download test exception: ${e.message}", e)
+            emit(0.0)
         }
     }.flowOn(Dispatchers.IO)
     
     override suspend fun measureUploadSpeed(): Flow<Double> = flow {
-        isCancelled = false
+        Log.d(TAG, "Starting upload speed test, isCancelled=$isCancelled")
         
         // Create 5MB of random data for upload test
         val uploadSize = 5 * 1024 * 1024 // 5MB
         val uploadData = ByteArray(uploadSize) { (it % 256).toByte() }
+        Log.d(TAG, "Upload data size: $uploadSize bytes")
         
         val requestBody = uploadData.toRequestBody("application/octet-stream".toMediaTypeOrNull())
         
@@ -117,32 +135,38 @@ class SpeedTestRepositoryImpl : SpeedTestRepository {
             .post(requestBody)
             .build()
         
-        withContext(Dispatchers.IO) {
-            val startTime = System.currentTimeMillis()
-            
-            try {
-                client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful || isCancelled) {
-                        emit(0.0)
-                        return@withContext
-                    }
-                    
-                    val totalElapsedSeconds = (System.currentTimeMillis() - startTime) / 1000.0
-                    if (totalElapsedSeconds > 0 && !isCancelled) {
-                        val speedMbps = (uploadSize * 8.0) / (totalElapsedSeconds * 1_000_000)
-                        emit(speedMbps)
-                    }
-                }
-            } catch (e: Exception) {
-                if (!isCancelled) {
+        val startTime = System.currentTimeMillis()
+        
+        try {
+            Log.d(TAG, "Executing upload request...")
+            client.newCall(request).execute().use { response ->
+                Log.d(TAG, "Upload response - Success: ${response.isSuccessful}, Code: ${response.code}")
+                
+                if (!response.isSuccessful || isCancelled) {
+                    Log.e(TAG, "Upload failed or cancelled - Success: ${response.isSuccessful}, Cancelled: $isCancelled")
                     emit(0.0)
+                    return@flow
+                }
+                
+                val totalElapsedSeconds = (System.currentTimeMillis() - startTime) / 1000.0
+                if (totalElapsedSeconds > 0 && !isCancelled) {
+                    val speedMbps = (uploadSize * 8.0) / (totalElapsedSeconds * 1_000_000)
+                    Log.d(TAG, "Upload complete - Size: $uploadSize bytes, Time: $totalElapsedSeconds s, Speed: $speedMbps Mbps")
+                    emit(speedMbps)
                 }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Upload test exception: ${e.message}", e)
+            emit(0.0)
         }
     }.flowOn(Dispatchers.IO)
     
     override suspend fun measurePing(): Double = withContext(Dispatchers.IO) {
-        if (isCancelled) return@withContext 0.0
+        Log.d(TAG, "Starting ping test, isCancelled=$isCancelled")
+        if (isCancelled) {
+            Log.d(TAG, "Ping test cancelled before start")
+            return@withContext 0.0
+        }
         
         val pingResults = mutableListOf<Double>()
         
@@ -151,6 +175,7 @@ class SpeedTestRepositoryImpl : SpeedTestRepository {
             if (isCancelled) return@withContext 0.0
             
             try {
+                Log.d(TAG, "Pinging: $url")
                 val request = Request.Builder()
                     .url(url)
                     .head() // Use HEAD request for minimal data transfer
@@ -163,28 +188,37 @@ class SpeedTestRepositoryImpl : SpeedTestRepository {
                     if (response.isSuccessful) {
                         val pingMs = (endTime - startTime) / 1_000_000.0
                         pingResults.add(pingMs)
+                        Log.d(TAG, "Ping to $url: $pingMs ms")
+                    } else {
+                        Log.w(TAG, "Ping to $url failed - Code: ${response.code}")
                     }
                 }
             } catch (e: Exception) {
-                // Skip failed pings
+                Log.e(TAG, "Ping to $url exception: ${e.message}")
             }
         }
         
         // Return average ping
-        if (pingResults.isNotEmpty()) {
+        val avgPing = if (pingResults.isNotEmpty()) {
             pingResults.average()
         } else {
             0.0
         }
+        Log.d(TAG, "Ping test complete - Average: $avgPing ms from ${pingResults.size} results")
+        avgPing
     }
     
     override suspend fun measureJitter(): Double = withContext(Dispatchers.IO) {
-        if (isCancelled) return@withContext 0.0
+        Log.d(TAG, "Starting jitter test, isCancelled=$isCancelled")
+        if (isCancelled) {
+            Log.d(TAG, "Jitter test cancelled before start")
+            return@withContext 0.0
+        }
         
         val pingResults = mutableListOf<Double>()
         
         // Perform multiple ping tests to calculate jitter
-        repeat(5) {
+        repeat(5) { iteration ->
             if (isCancelled) return@withContext 0.0
             
             try {
@@ -200,24 +234,33 @@ class SpeedTestRepositoryImpl : SpeedTestRepository {
                     if (response.isSuccessful) {
                         val pingMs = (endTime - startTime) / 1_000_000.0
                         pingResults.add(pingMs)
+                        Log.d(TAG, "Jitter test iteration $iteration: $pingMs ms")
                     }
                 }
             } catch (e: Exception) {
-                // Skip failed pings
+                Log.e(TAG, "Jitter test iteration $iteration exception: ${e.message}")
             }
         }
         
         // Calculate jitter as standard deviation of ping times
-        if (pingResults.size >= 2) {
+        val jitter = if (pingResults.size >= 2) {
             val mean = pingResults.average()
             val variance = pingResults.map { (it - mean).pow(2) }.average()
             sqrt(variance)
         } else {
             0.0
         }
+        Log.d(TAG, "Jitter test complete - Jitter: $jitter ms from ${pingResults.size} samples")
+        jitter
     }
     
     override fun cancelTest() {
+        Log.d(TAG, "Test cancelled")
         isCancelled = true
+    }
+    
+    fun resetCancellation() {
+        Log.d(TAG, "Resetting cancellation flag")
+        isCancelled = false
     }
 }

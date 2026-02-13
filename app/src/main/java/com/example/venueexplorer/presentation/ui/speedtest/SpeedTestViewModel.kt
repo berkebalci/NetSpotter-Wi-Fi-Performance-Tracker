@@ -1,8 +1,10 @@
 package com.example.venueexplorer.presentation.ui.speedtest
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.venueexplorer.data.repository.SpeedTestRepository
+import com.example.venueexplorer.data.repository.SpeedTestRepositoryImpl
 import com.example.venueexplorer.presentation.state.SpeedTestPhase
 import com.example.venueexplorer.presentation.state.SpeedTestUIState
 import kotlinx.coroutines.Job
@@ -21,6 +23,10 @@ class SpeedTestViewModel(
     private val speedTestRepository: SpeedTestRepository
 ) : ViewModel() {
     
+    companion object {
+        private const val TAG = "SpeedTestViewModel"
+    }
+    
     private val _uiState = MutableStateFlow(SpeedTestUIState())
     val uiState: StateFlow<SpeedTestUIState> = _uiState.asStateFlow()
     
@@ -30,11 +36,19 @@ class SpeedTestViewModel(
      * Starts a complete speed test sequence: Ping → Download → Upload
      */
     fun startSpeedTest() {
+        Log.d(TAG, "startSpeedTest() called")
         // Cancel any existing test
         stopSpeedTest()
         
         testJob = viewModelScope.launch {
             try {
+                Log.d(TAG, "Starting test sequence")
+                
+                // Reset the cancellation flag in the repository
+                if (speedTestRepository is SpeedTestRepositoryImpl) {
+                    (speedTestRepository as SpeedTestRepositoryImpl).resetCancellation()
+                }
+                
                 _uiState.update {
                     it.copy(
                         isTestRunning = true,
@@ -49,7 +63,9 @@ class SpeedTestViewModel(
                 }
                 
                 // Phase 1: Measure Ping
+                Log.d(TAG, "Phase 1: Measuring ping...")
                 val ping = speedTestRepository.measurePing()
+                Log.d(TAG, "Ping result: $ping ms")
                 _uiState.update {
                     it.copy(
                         ping = ping,
@@ -58,7 +74,9 @@ class SpeedTestViewModel(
                 }
                 
                 // Phase 2: Measure Jitter
+                Log.d(TAG, "Phase 2: Measuring jitter...")
                 val jitter = speedTestRepository.measureJitter()
+                Log.d(TAG, "Jitter result: $jitter ms")
                 _uiState.update {
                     it.copy(
                         jitter = jitter,
@@ -68,8 +86,10 @@ class SpeedTestViewModel(
                 }
                 
                 // Phase 3: Measure Download Speed
+                Log.d(TAG, "Phase 3: Measuring download speed...")
                 speedTestRepository.measureDownloadSpeed()
                     .catch { e ->
+                        Log.e(TAG, "Download test error in flow: ${e.message}", e)
                         _uiState.update {
                             it.copy(
                                 error = "Download test failed: ${e.message}",
@@ -78,6 +98,7 @@ class SpeedTestViewModel(
                         }
                     }
                     .collect { speed ->
+                        Log.d(TAG, "Download speed update: $speed Mbps")
                         _uiState.update {
                             it.copy(
                                 downloadSpeed = speed,
@@ -86,6 +107,7 @@ class SpeedTestViewModel(
                         }
                     }
                 
+                Log.d(TAG, "Download phase complete, moving to upload...")
                 _uiState.update {
                     it.copy(
                         progress = 0.66f,
@@ -94,8 +116,10 @@ class SpeedTestViewModel(
                 }
                 
                 // Phase 4: Measure Upload Speed
+                Log.d(TAG, "Phase 4: Measuring upload speed...")
                 speedTestRepository.measureUploadSpeed()
                     .catch { e ->
+                        Log.e(TAG, "Upload test error in flow: ${e.message}", e)
                         _uiState.update {
                             it.copy(
                                 error = "Upload test failed: ${e.message}",
@@ -104,6 +128,7 @@ class SpeedTestViewModel(
                         }
                     }
                     .collect { speed ->
+                        Log.d(TAG, "Upload speed update: $speed Mbps")
                         _uiState.update {
                             it.copy(
                                 uploadSpeed = speed,
@@ -113,6 +138,7 @@ class SpeedTestViewModel(
                     }
                 
                 // Test Complete
+                Log.d(TAG, "All phases complete!")
                 _uiState.update {
                     it.copy(
                         currentPhase = SpeedTestPhase.COMPLETE,
@@ -122,6 +148,7 @@ class SpeedTestViewModel(
                 }
                 
             } catch (e: Exception) {
+                Log.e(TAG, "Speed test exception: ${e.message}", e)
                 _uiState.update {
                     it.copy(
                         error = "Speed test failed: ${e.message}",
@@ -137,6 +164,7 @@ class SpeedTestViewModel(
      * Stops the currently running speed test.
      */
     fun stopSpeedTest() {
+        Log.d(TAG, "stopSpeedTest() called")
         testJob?.cancel()
         speedTestRepository.cancelTest()
         _uiState.update {
@@ -156,6 +184,7 @@ class SpeedTestViewModel(
     
     override fun onCleared() {
         super.onCleared()
+        Log.d(TAG, "ViewModel cleared")
         stopSpeedTest()
     }
 }
