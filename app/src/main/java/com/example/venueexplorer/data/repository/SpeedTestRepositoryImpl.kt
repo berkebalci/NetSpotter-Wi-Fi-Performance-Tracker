@@ -18,17 +18,13 @@ import kotlin.math.sqrt
  * Implementation of SpeedTestRepository using OkHttpfor network operations.
  * Measures internet speed by downloading/uploading test files and calculating transfer rates.
  */
-class SpeedTestRepositoryImpl : SpeedTestRepository {
+class SpeedTestRepositoryImpl(
+    private val client: OkHttpClient
+) : SpeedTestRepository {
     
     companion object {
         private const val TAG = "SpeedTestRepo"
     }
-    
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
     
     // Test file URLs - using HTTP to avoid SSL certificate issues
     private val downloadTestUrls = listOf(
