@@ -7,7 +7,6 @@ object VenueExplorerClient {
     // It works on the real device !!
 
     val apiService: VenueExplorerApiService by lazy {
-        NetworkModule.provideRetrofitClient()
-            .create(VenueExplorerApiService::class.java)
+        NetworkModule.provideRetrofitClient().create(VenueExplorerApiService::class.java)
     }
 }

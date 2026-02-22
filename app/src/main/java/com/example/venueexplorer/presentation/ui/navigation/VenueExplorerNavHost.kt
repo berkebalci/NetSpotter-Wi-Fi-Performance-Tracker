@@ -26,7 +26,7 @@ fun VenueExplorerNavHost(
     val viewModelFactory = VenueExplorerViewModelFactory(
         venueRepository = appContainer.venueLocalRepository,
         categoryRepository = appContainer.categoryRepository,
-        locationService = appContainer.locationService,
+        locationRepository = appContainer.locationRepository,
         speedTestRepository = appContainer.speedTestRepository
     )
     NavHost(
@@ -67,7 +67,7 @@ fun VenueExplorerNavHost(
                 venueLatitude = latitude,
                 venueLongitude = longitude,
                 onBackClicked = { navController.popBackStack() },
-                locationService = appContainer.locationService
+                viewModel = viewModel(factory = viewModelFactory)
             )
         }
         composable(route = VenueExplorerNavDestination.Details.route,
@@ -93,9 +93,8 @@ fun VenueExplorerNavHost(
         }
         composable(route = VenueExplorerNavDestination.Add.route) {
             EditScreen(
-                venueId = null, // ID göndermiyoruz!
+                venueId = null,
                 viewModel = viewModel(factory = viewModelFactory),
-                locationService = appContainer.locationService,
                 onSaveButtonClicked = { navController.popBackStack() },
                 onCancelButtonClicked = { navController.popBackStack() }
             )
@@ -108,16 +107,10 @@ fun VenueExplorerNavHost(
             val venueId = backStackEntry.arguments?.getString("venueId") ?: return@composable
             Log.e("Navigation Sirasinda", "navigation VenueId is : $venueId")
             EditScreen(
-                venueId = venueId
-                ,viewModel = viewModel(factory = viewModelFactory),
-                onSaveButtonClicked ={
-                    navController.popBackStack()
-                } ,
-            onCancelButtonClicked = {
-                navController.popBackStack()
-            },
-                locationService = appContainer.locationService
-
+                venueId = venueId,
+                viewModel = viewModel(factory = viewModelFactory),
+                onSaveButtonClicked = { navController.popBackStack() },
+                onCancelButtonClicked = { navController.popBackStack() }
             )
         }
         composable(route = VenueExplorerNavDestination.SpeedTest.route) {

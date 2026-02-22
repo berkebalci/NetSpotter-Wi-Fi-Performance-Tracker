@@ -8,20 +8,28 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresPermission
 import androidx.core.content.ContextCompat
+import com.example.venueexplorer.domain.repository.LocationRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.Task
-import kotlinx.coroutines.tasks.await
 
+/**
+ * LocationRepository interface'inin data katmanı implementasyonu.
+ *
+ * Bu sınıf FusedLocationProviderClient'ı sarmalayarak domain katmanının
+ * beklediği soyut sözleşmeyi (LocationRepository) somut API çağrılarına dönüştürür.
+ * ViewModel'lar ve UseCase'ler bu sınıfı DOĞRUDAN değil, LocationRepository
+ * interface'i üzerinden kullanır.
+ */
 class LocationService(
     private val fusedLocationClient: FusedLocationProviderClient,
     private val context: Context
-) {
+) : LocationRepository {
 
-    fun hasLocationPermission(): Boolean {
+    override fun hasLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -33,12 +41,12 @@ class LocationService(
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    fun getLastLocation(): Task<Location?> {
+    override fun getLastLocation(): Task<Location?> {
         return fusedLocationClient.lastLocation
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    fun getCurrentLocation(): Task<Location> {
+    override fun getCurrentLocation(): Task<Location> {
         return fusedLocationClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,
             null // CancellationToken
@@ -54,9 +62,9 @@ class LocationService(
      * @param timeoutMillis Timeout süresi (milisaniye). Varsayılan: 15 saniye
      */
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    fun requestSingleLocationUpdate(
+    override fun requestSingleLocationUpdate(
         onLocationReceived: (Location?) -> Unit,
-        timeoutMillis: Long = 15000L
+        timeoutMillis: Long
     ) {
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,

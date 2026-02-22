@@ -26,13 +26,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.venueexplorer.data.location.LocationService
 
 @Composable
 fun EditScreen(
     venueId: String?,
     viewModel: EditScreenViewModel,
-    locationService: LocationService,  // ← LocationService eklendi
     onSaveButtonClicked: () -> Unit,
     onCancelButtonClicked: () -> Unit,
     modifier: Modifier = Modifier
@@ -150,9 +148,10 @@ fun EditScreen(
                             latitude = uiState.latitude,
                             longitude = uiState.longitude,
                             onClick = {
-                                // İzin kontrolü ve konum alma
-                                if (locationService.hasLocationPermission()) {
-                                    viewModel.getCurrentLocation() { location ->
+                                // ViewModel'a izin kontrolünü delege ediyoruz.
+                                // EditScreen artık LocationService'i bilmiyor.
+                                if (viewModel.hasLocationPermission()) {
+                                    viewModel.getCurrentLocation { location ->
                                         location?.let {
                                             viewModel.updateLocation(it.latitude, it.longitude)
                                         }

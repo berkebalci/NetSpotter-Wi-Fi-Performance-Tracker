@@ -18,12 +18,12 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.example.venueexplorer.data.location.LocationService
+import com.example.venueexplorer.domain.repository.LocationRepository
 
 class EditScreenViewModel(
     private val venueLocalRepository: VenueLocalRepository,
     private val categoryLocalRepository: CategoryLocalRepository,
-    private val locationService: LocationService
+    private val locationRepository: LocationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditScreenUIState())
@@ -37,6 +37,9 @@ class EditScreenViewModel(
     fun updateLocationPermssion(isGranted: Boolean){
         hasLocationPermissionGranted = isGranted
     }
+
+    /** EditScreen'in doğrudan LocationRepository'e erişmeden izin durumunu sorgulamasını sağlar. */
+    fun hasLocationPermission(): Boolean = locationRepository.hasLocationPermission()
     
     /**
      * Kullanıcının mevcut konumunu almak için Google'ın önerdiği en iyi pratikleri kullanır.
@@ -50,7 +53,7 @@ class EditScreenViewModel(
         onLocationReceived: (Location?) -> Unit
     ) {
         // İzin kontrolü
-        if (!locationService.hasLocationPermission()) {
+        if (!locationRepository.hasLocationPermission()) {
             Log.w(TAG, "Location permission not granted")
             onLocationReceived(null)
             return
@@ -58,7 +61,7 @@ class EditScreenViewModel(
 
         try {
             // 1. Adım: getCurrentLocation() dene (hızlı yöntem)
-            locationService.getCurrentLocation()
+            locationRepository.getCurrentLocation()
                 .addOnSuccessListener { location ->
                     if (location != null) {
                         // Başarılı, konumu döndür
@@ -89,7 +92,7 @@ class EditScreenViewModel(
         onLocationReceived: (Location?) -> Unit
     ) {
         try {
-            locationService.requestSingleLocationUpdate(
+            locationRepository.requestSingleLocationUpdate(
                 onLocationReceived = { location ->
                     if (location != null) {
                         Log.d(TAG, "requestSingleLocationUpdate succeeded: lat=${location.latitude}, lng=${location.longitude}")
@@ -97,7 +100,7 @@ class EditScreenViewModel(
                     } else {
                         // requestLocationUpdates da başarısız, son çare olarak getLastLocation() dene
                         Log.w(TAG, "requestSingleLocationUpdate returned null, trying getLastLocation as fallback")
-                        locationService.getLastLocation()
+                        locationRepository.getLastLocation()
                             .addOnSuccessListener { lastLocation ->
                                 if (lastLocation != null) {
                                     Log.d(TAG, "getLastLocation succeeded: lat=${lastLocation.latitude}, lng=${lastLocation.longitude}")

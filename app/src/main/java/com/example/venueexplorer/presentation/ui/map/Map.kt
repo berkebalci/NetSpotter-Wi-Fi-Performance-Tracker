@@ -1,5 +1,4 @@
 import android.Manifest
-import android.location.Location
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -10,59 +9,64 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.venueexplorer.data.location.LocationService
-import com.google.android.gms.maps.CameraUpdateFactory // 1. EKLENDİ
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.venueexplorer.presentation.ui.map.MapViewModel
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 
+/**
+ * MapScreen — Purely UI (Composable)
+ *
+ * Bu composable'ın iki tek sorumluluğu var:
+ * 1. Kullanıcıdan izin istemek ve sonucu ViewModel'a iletmek
+ * 2. ViewModel'dan gelen `uiState`'i haritada render etmek
+ *
+ * Konum NASIL alınır? → MapViewModel bilir
+ * Konum alma stratejisi nedir? → GetCurrentLocationUseCase bilir
+ * FusedLocationProviderClient nedir? → LocationService bilir
+ *
+ * Bu composable bunların HiÇbirini bilmez.
+ */
 @Composable
 fun MapScreen(
     venueLatitude: Double?,
     venueLongitude: Double?,
     onBackClicked: () -> Unit,
-    locationService: LocationService
+    viewModel: MapViewModel
 ) {
-    var userLocation by remember { mutableStateOf<LatLng?>(null) }
-    var hasPermission by remember { mutableStateOf(locationService.hasLocationPermission()) }
+    // ViewModel'dan gelen state'i observe et
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // ... İzin kodları aynı kalabilir ...
-    // (Kod tekrarı olmasın diye burayı kısalttım, senin kodundaki logic doğru)
-
+    // --- İZİN YÖNETİMİ ---
+    // Composable sadece iznin verilip verilmediğini ViewModel'a bildirir.
+    // "İzinle ne yapılır?" sorusunun cevabı ViewModel'da.
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        hasPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                 permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (hasPermission) {
-            getCurrentLocation(locationService) { location ->
-                location?.let { userLocation = LatLng(it.latitude, it.longitude) }
-            }
+        if (granted) {
+            viewModel.onPermissionGranted()
         }
     }
 
-    LaunchedEffect(hasPermission) {
-        if (hasPermission) {
-            getCurrentLocation(locationService) { location ->
-                location?.let { userLocation = LatLng(it.latitude, it.longitude) }
-            }
-        } else {
-            locationPermissionLauncher.launch(
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+    LaunchedEffect(Unit) {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             )
-        }
+        )
     }
 
     // --- HARİTA VE KAMERA AYARLARI ---
-
     val venueLocation = remember(venueLatitude, venueLongitude) {
-        if (venueLatitude != null && venueLongitude != null) {
-            LatLng(venueLatitude, venueLongitude)
-        } else null
+        if (venueLatitude != null && venueLongitude != null) LatLng(venueLatitude, venueLongitude)
+        else null
     }
 
-    // 2. DÜZELTME: rememberCameraPositionState kullanımı
-    // Varsayılan olarak Venue varsa oraya, yoksa İstanbul'a baksın
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             venueLocation ?: LatLng(41.0082, 28.9784),
@@ -70,25 +74,21 @@ fun MapScreen(
         )
     }
 
-    // 3. DÜZELTME: Animasyonu LaunchedEffect ile tetiklemek
-    // VenueLocation değiştiği an (veya null değilse) kamera oraya kaysın.
     LaunchedEffect(venueLocation) {
         venueLocation?.let {
-            // CameraUpdateFactory kullanıyoruz
             cameraPositionState.animate(
                 update = CameraUpdateFactory.newLatLngZoom(it, 15f),
-                durationMs = 1000 // İsteğe bağlı animasyon süresi
+                durationMs = 1000
             )
         }
     }
 
+    // --- UI RENDER ---
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState
-            // onMapLoaded içindeki logic'i LaunchedEffect'e taşıdık, burası temiz kaldı.
         ) {
-            // Venue Marker
             venueLocation?.let { location ->
                 Marker(
                     state = MarkerState(position = location),
@@ -96,15 +96,21 @@ fun MapScreen(
                 )
             }
 
-            // User Marker
-            userLocation?.let { location ->
+            // Kullanıcı konumu: ViewModel'dan StateFlow aracılığıyla geliyor.
+            // Configuration change'de kaybolmaz.
+            uiState.userMarkerState?.let { markerState ->
                 Marker(
-                    state = MarkerState(position = location),
-                    title = "Your Location",
-                    // Marker rengini değiştirebilirsin karışmaması için
-                    // icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                    state = markerState,
+                    title = "Your Location"
                 )
             }
+        }
+
+        // Yükleniyor göstergesi — konum alınırken
+        if (uiState.isLoadingLocation) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
 
         // Top Bar
@@ -133,20 +139,5 @@ fun MapScreen(
                 )
             }
         }
-    }
-}
-
-// Helper function aynı kalabilir
-private fun getCurrentLocation(
-    locationService: LocationService,
-    onLocationReceived: (Location?) -> Unit
-) {
-    // Burada MissingPermission hatası verebilir, @SuppressLint eklemen gerekebilir
-    try {
-        locationService.getLastLocation()
-            .addOnSuccessListener { location -> onLocationReceived(location) }
-            .addOnFailureListener { onLocationReceived(null) }
-    } catch (e: SecurityException) {
-        onLocationReceived(null)
     }
 }
