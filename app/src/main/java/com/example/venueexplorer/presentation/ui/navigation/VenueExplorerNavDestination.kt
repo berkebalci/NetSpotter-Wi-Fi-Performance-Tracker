@@ -15,4 +15,5 @@ sealed class VenueExplorerNavDestination(val route: String) {
     data object SpeedTest: VenueExplorerNavDestination("SpeedTestScreen")
 
 
+
 }

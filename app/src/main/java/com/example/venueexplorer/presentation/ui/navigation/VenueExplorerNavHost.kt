@@ -50,9 +50,7 @@ fun VenueExplorerNavHost(
                     navController.navigate(VenueExplorerNavDestination.SpeedTest.route)
                 }
 
-            )
-
-        }
+            )}
         composable(
             route = VenueExplorerNavDestination.Map.route,
             arguments = listOf(

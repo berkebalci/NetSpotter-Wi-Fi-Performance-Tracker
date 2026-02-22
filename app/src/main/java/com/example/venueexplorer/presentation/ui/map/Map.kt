@@ -1,4 +1,5 @@
 import android.Manifest
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -38,6 +39,8 @@ fun MapScreen(
 ) {
     // ViewModel'dan gelen state'i observe et
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    //var isLocationPermitted = remember { false } bu degiskenin degeri degistigi zaman recompose olmaz!!
+    var isLocationPermitted by remember { mutableStateOf(false)}
 
     // --- İZİN YÖNETİMİ ---
     // Composable sadece iznin verilip verilmediğini ViewModel'a bildirir.
@@ -47,6 +50,7 @@ fun MapScreen(
     ) { permissions ->
         val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                 permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        isLocationPermitted = granted
         if (granted) {
             viewModel.onPermissionGranted()
         }
@@ -63,6 +67,7 @@ fun MapScreen(
 
     // --- HARİTA VE KAMERA AYARLARI ---
     val venueLocation = remember(venueLatitude, venueLongitude) {
+        Log.e("MapScreen", "Venue location: $venueLatitude, $venueLongitude")
         if (venueLatitude != null && venueLongitude != null) LatLng(venueLatitude, venueLongitude)
         else null
     }
@@ -71,6 +76,17 @@ fun MapScreen(
         position = CameraPosition.fromLatLngZoom(
             venueLocation ?: LatLng(41.0082, 28.9784),
             15f
+        )
+    }
+    val MapUiSettings = remember(isLocationPermitted){
+        MapUiSettings(
+            myLocationButtonEnabled = isLocationPermitted,
+
+        )
+    }
+    val mapProperties = remember(isLocationPermitted) {
+        MapProperties(
+            isMyLocationEnabled = isLocationPermitted // Kullanıcının güncel konumunda mavi nokta çıkarır
         )
     }
 
@@ -87,7 +103,9 @@ fun MapScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState
+            cameraPositionState = cameraPositionState,
+            properties = mapProperties,
+            uiSettings = MapUiSettings
         ) {
             venueLocation?.let { location ->
                 Marker(
