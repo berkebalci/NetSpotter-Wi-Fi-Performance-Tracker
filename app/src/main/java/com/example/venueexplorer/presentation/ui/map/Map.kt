@@ -25,7 +25,7 @@ import com.google.maps.android.compose.*
  *
  * Konum NASIL alınır? → MapViewModel bilir
  * Konum alma stratejisi nedir? → GetCurrentLocationUseCase bilir
- * FusedLocationProviderClient nedir? → LocationService bilir
+ * FusedLocationProviderClient nedir? → LocationRepositoryImpl bilir
  *
  * Bu composable bunların HiÇbirini bilmez.
  */

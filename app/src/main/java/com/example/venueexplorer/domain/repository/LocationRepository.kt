@@ -7,7 +7,7 @@ import com.google.android.gms.tasks.Task
  * Konum işlemlerini soyutlayan domain katmanı interface'i.
  *
  * Bu interface sayesinde:
- * - UI ve ViewModel katmanları data katmanına (LocationService, FusedLocationProviderClient)
+ * - UI ve ViewModel katmanları data katmanına (LocationRepositoryImpl, FusedLocationProviderClient)
  *   doğrudan bağımlı olmaz (Dependency Inversion Principle).
  * - Test sırasında gerçek GPS kullanmadan bu interface mock'lanabilir.
  * - İleride farklı bir konum kütüphanesine geçilirse sadece bu interface'in

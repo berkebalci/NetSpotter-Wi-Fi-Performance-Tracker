@@ -149,7 +149,7 @@ fun EditScreen(
                             longitude = uiState.longitude,
                             onClick = {
                                 // ViewModel'a izin kontrolünü delege ediyoruz.
-                                // EditScreen artık LocationService'i bilmiyor.
+                                // EditScreen artık LocationRepositoryImpl'i bilmiyor.
                                 if (viewModel.hasLocationPermission()) {
                                     viewModel.getCurrentLocation { location ->
                                         location?.let {

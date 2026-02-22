@@ -1,11 +1,11 @@
 package com.example.venueexplorer.data.local
 
 import android.content.Context
-import com.example.venueexplorer.data.location.LocationService
+import com.example.venueexplorer.data.location.LocationRepositoryImpl
 import com.example.venueexplorer.data.remote.VenueExplorerApiService
 import com.example.venueexplorer.data.remote.VenueExplorerClient
-import com.example.venueexplorer.data.repository.SpeedTestRepository
-import com.example.venueexplorer.data.repository.SpeedTestRepositoryImpl
+import com.example.venueexplorer.domain.repository.SpeedTestRepository
+import com.example.venueexplorer.domain.usecase.SpeedTestRepositoryImpl
 import com.example.venueexplorer.di.NetworkModule
 import com.example.venueexplorer.domain.repository.LocationRepository
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -19,11 +19,11 @@ class AppContainer(private val context: Context) {
     private val apiService : VenueExplorerApiService by lazy {
         VenueExplorerClient.apiService
     }
-    // LocationService, LocationRepository interface'ini implement eder.
+    // LocationRepositoryImpl, LocationRepository interface'ini implement eder.
     // Burada LocationRepository tipiyle expose ediyoruz (Dependency Inversion Principle):
-    // Yukarı katmanlar LocationService'e değil, interface'e bağımlı olur.
+    // Yukarı katmanlar LocationRepositoryImpl'e değil, interface'e bağımlı olur.
     val locationRepository: LocationRepository by lazy {
-        LocationService(fusedLocationProviderClient, context)
+        LocationRepositoryImpl(fusedLocationProviderClient, context)
     }
     val fusedLocationProviderClient: FusedLocationProviderClient by lazy {
         LocationServices.getFusedLocationProviderClient(context)

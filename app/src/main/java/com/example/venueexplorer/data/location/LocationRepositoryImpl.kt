@@ -24,7 +24,7 @@ import com.google.android.gms.tasks.Task
  * ViewModel'lar ve UseCase'ler bu sınıfı DOĞRUDAN değil, LocationRepository
  * interface'i üzerinden kullanır.
  */
-class LocationService(
+class LocationRepositoryImpl(
     private val fusedLocationClient: FusedLocationProviderClient,
     private val context: Context
 ) : LocationRepository {

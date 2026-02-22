@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.venueexplorer.data.local.CategoryLocalRepository
 import com.example.venueexplorer.data.local.VenueLocalRepository
-import com.example.venueexplorer.data.repository.SpeedTestRepository
+import com.example.venueexplorer.domain.repository.SpeedTestRepository
 import com.example.venueexplorer.domain.repository.LocationRepository
 import com.example.venueexplorer.domain.usecase.GetCurrentLocationUseCase
 import com.example.venueexplorer.presentation.ui.details.DetailsScreenViewModel
