@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.venueexplorer.domain.repository.SpeedTestRepository
-import com.example.venueexplorer.domain.usecase.SpeedTestRepositoryImpl
+import com.example.venueexplorer.data.speedtest.SpeedTestRepositoryImpl
 import com.example.venueexplorer.presentation.state.SpeedTestPhase
 import com.example.venueexplorer.presentation.state.SpeedTestUIState
 import kotlinx.coroutines.Job

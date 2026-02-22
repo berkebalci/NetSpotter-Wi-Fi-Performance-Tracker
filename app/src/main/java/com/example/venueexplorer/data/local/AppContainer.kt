@@ -5,7 +5,7 @@ import com.example.venueexplorer.data.location.LocationRepositoryImpl
 import com.example.venueexplorer.data.remote.VenueExplorerApiService
 import com.example.venueexplorer.data.remote.VenueExplorerClient
 import com.example.venueexplorer.domain.repository.SpeedTestRepository
-import com.example.venueexplorer.domain.usecase.SpeedTestRepositoryImpl
+import com.example.venueexplorer.data.speedtest.SpeedTestRepositoryImpl
 import com.example.venueexplorer.di.NetworkModule
 import com.example.venueexplorer.domain.repository.LocationRepository
 import com.google.android.gms.location.FusedLocationProviderClient

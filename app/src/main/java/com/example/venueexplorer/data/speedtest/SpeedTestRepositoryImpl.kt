@@ -1,4 +1,4 @@
-package com.example.venueexplorer.domain.usecase
+package com.example.venueexplorer.data.speedtest
 
 import android.util.Log
 import com.example.venueexplorer.domain.repository.SpeedTestRepository
