@@ -51,6 +51,7 @@ fun VenueExplorerNavHost(
                 }
 
             )}
+
         composable(
             route = VenueExplorerNavDestination.Map.route,
             arguments = listOf(

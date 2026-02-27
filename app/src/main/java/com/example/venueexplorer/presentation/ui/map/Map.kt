@@ -1,4 +1,7 @@
 import android.Manifest
+import android.content.pm.PackageManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,7 +43,13 @@ fun MapScreen(
     // ViewModel'dan gelen state'i observe et
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     //var isLocationPermitted = remember { false } bu degiskenin degeri degistigi zaman recompose olmaz!!
-    var isLocationPermitted by remember { mutableStateOf(false)}
+    val context = LocalContext.current
+    var isLocationPermitted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
+    }
 
     // --- İZİN YÖNETİMİ ---
     // Composable sadece iznin verilip verilmediğini ViewModel'a bildirir.

@@ -17,5 +17,8 @@ data class MapUiState(
     /** Kullanıcının mevcut konumu. null → henüz alınmadı veya izin yok. */
     val userMarkerState: MarkerState? = null,
     /** Konum alınıyor mu? Yükleniyor göstergesi için. */
-    val isLoadingLocation: Boolean = false
+    val isLoadingLocation: Boolean = false,
+    val isLocationPermissionGranted: Boolean = false,
+    val userLatitude: Double? = null,
+    val userLongitude: Double? = null
 )
