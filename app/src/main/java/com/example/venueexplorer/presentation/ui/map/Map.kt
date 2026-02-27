@@ -6,6 +6,8 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -14,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import com.example.venueexplorer.presentation.ui.map.MapViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -66,6 +69,10 @@ fun MapScreen(
     }
 
     LaunchedEffect(Unit) {
+        // İzin zaten verilmişse hemen konumu al
+        if (isLocationPermitted) {
+            viewModel.onPermissionGranted()
+        }
         locationPermissionLauncher.launch(
             arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -83,16 +90,17 @@ fun MapScreen(
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
-            venueLocation ?: LatLng(41.0082, 28.9784),
+            venueLocation ?: LatLng(uiState.userLatitude?:41.0082,uiState.userLongitude?: 28.9784),
             15f
         )
     }
-    val MapUiSettings = remember(isLocationPermitted){
+    val mapUiSettings = remember(isLocationPermitted){
         MapUiSettings(
-            myLocationButtonEnabled = isLocationPermitted,
-
+            myLocationButtonEnabled = false, // Built-in buton overlay ile çakışıyor, custom FAB kullanıyoruz
         )
     }
+
+    val coroutineScope = rememberCoroutineScope()
     val mapProperties = remember(isLocationPermitted) {
         MapProperties(
             isMyLocationEnabled = isLocationPermitted // Kullanıcının güncel konumunda mavi nokta çıkarır
@@ -114,7 +122,7 @@ fun MapScreen(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             properties = mapProperties,
-            uiSettings = MapUiSettings
+            uiSettings = mapUiSettings
         ) {
             venueLocation?.let { location ->
                 Marker(
@@ -138,6 +146,34 @@ fun MapScreen(
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center)
             )
+        }
+
+        // Custom My Location FAB — kullanıcı konumu varsa göster
+        if (uiState.userLatitude != null && uiState.userLongitude != null) {
+            FloatingActionButton(
+                onClick = {
+                    coroutineScope.launch {
+                        cameraPositionState.animate(
+                            update = CameraUpdateFactory.newLatLngZoom(
+                                LatLng(uiState.userLatitude!!, uiState.userLongitude!!),
+                                15f
+                            ),
+                            durationMs = 1000
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 24.dp),
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MyLocation,
+                    contentDescription = "My Location"
+                )
+            }
         }
 
         // Top Bar

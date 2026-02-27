@@ -49,7 +49,9 @@ class MapViewModel(
                     userMarkerState = location?.let {
                         MarkerState(position = LatLng(it.latitude, it.longitude))
                     },
-                    isLocationPermissionGranted = true
+                    isLocationPermissionGranted = true,
+                    userLatitude = location?.latitude,
+                    userLongitude = location?.longitude
                 )
             }
         }
