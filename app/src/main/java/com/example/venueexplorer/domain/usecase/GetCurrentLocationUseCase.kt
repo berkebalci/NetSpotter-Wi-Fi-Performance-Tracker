@@ -61,6 +61,7 @@ class GetCurrentLocationUseCase(
     /** Task<Location> tabanlı getCurrentLocation()'ı coroutine'e çevirir. */
     private suspend fun tryGetCurrentLocation(): Location? =
         suspendCancellableCoroutine { continuation ->
+            //SuspendCancellableCoroutine yapisi oldugu icin cevap gelene kadar bu kod blogu hazirda bekler fakat bir sey yapmaz
             try {
                 locationRepository.getCurrentLocation()
                     .addOnSuccessListener { location -> continuation.resume(location) }
