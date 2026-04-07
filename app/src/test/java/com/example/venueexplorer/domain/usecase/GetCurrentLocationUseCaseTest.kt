@@ -32,6 +32,7 @@ class GetCurrentLocationUseCaseTest {
     fun `permission verilmedigi zaman direkt null dondur`() = runTest {
         every { repository.hasLocationPermission() } returns false
 
+
         val result = useCase()
         assertNull(result)
         verify(exactly = 1) { repository.hasLocationPermission() }
