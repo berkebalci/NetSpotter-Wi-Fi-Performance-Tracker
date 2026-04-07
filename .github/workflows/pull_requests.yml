@@ -12,14 +12,14 @@ jobs:
       - name: Setuo JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
           distribution: 'temurin'
-          cache: gradle # Önemli: Kütüphaneleri önbelleğe alır, her seferinde indirmez.
-            
-            # 3. ADIM: İzinleri ayarla
-            - name: Grant execute permission for gradlew
-              run: chmod +x gradlew # 'run' ile Linux komutu çalıştırdık.
+          java-version: '17'
+          cache: 'gradle'
 
-            # 4. ADIM: UNIT TESTLERİ KOŞTUR (Sürecin kalbi)
-            - name: Run Unit Tests
-              run: ./gradlew testDebugUnitTest # Eğer test fail olursa CI burada durur!
+            # 3. ADIM: İzinleri ayarla
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew # 'run' ile Linux komutu çalıştırdık.
+
+      # 4. ADIM: UNIT TESTLERİ KOŞTUR (Sürecin kalbi)
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest # Eğer test fail olursa CI burada durur!
